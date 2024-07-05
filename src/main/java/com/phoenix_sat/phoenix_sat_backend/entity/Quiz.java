@@ -22,13 +22,6 @@ public class Quiz  {
 
     private String title;
 
-    @ManyToOne
-    @JoinColumn(name = "content_id")
-    private CourseContent courseContent;
-
     @Column(name = "number_of_questions")
     private int numberOfQuestions;
-
-    @Column(name = "sequnce_number")
-    private Integer sequenceNumber;
 }

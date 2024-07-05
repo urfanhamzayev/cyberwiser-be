@@ -97,6 +97,16 @@
                                  constraintName="fk_CourseContent_Course"
                                  referencedColumnNames="id"
                                  referencedTableName="course"/>
+        <addForeignKeyConstraint baseTableName="course_content"
+                                 baseColumnNames="part_id"
+                                 constraintName="fk_course_content_part"
+                                 referencedTableName="part"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="course_content"
+                                 baseColumnNames="quiz_id"
+                                 constraintName="fk_course_content_quiz"
+                                 referencedTableName="quiz"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <!-- Create Progress table -->
