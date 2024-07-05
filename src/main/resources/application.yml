@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: phoenix-sat-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/phoenix-sat-backend?currentSchema=public
+    username: postgres
+    password: huseynderya
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+    hibernate:
+      ddl-auto: none
+    open-in-view:
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    default-schema: public
+    liquibase-schema: public
+    enabled: true
