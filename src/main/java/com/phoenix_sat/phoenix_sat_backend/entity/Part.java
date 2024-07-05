@@ -22,13 +22,6 @@ public class Part {
     private String title;
     private String duration;
 
-    @ManyToOne
-    @JoinColumn(name = "content_id")
-    private CourseContent courseContent;
-
     @JoinColumn(name = "video_url")
     private String videoUrl;
-
-    @Column(name = "sequence_number")
-    private Integer sequenceNumber;
 }

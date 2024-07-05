@@ -1,9 +1,12 @@
 package com.phoenix_sat.phoenix_sat_backend.entity;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.converter.ContentTypeConverter;
 import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
+import com.phoenix_sat.phoenix_sat_backend.enums.ContentType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import java.util.List;
 
@@ -26,9 +29,18 @@ public class CourseContent {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    @OneToMany
-    private List<Part> part;
+    @OneToOne
+    @PrimaryKeyJoinColumn(name = "part_id")
+    private Part part;
 
-    @OneToMany
-    private List<Quiz> quiz;
+    @OneToOne
+    @PrimaryKeyJoinColumn(name = "quiz_id")
+    private Quiz quiz;
+
+    @Enumerated(EnumType.STRING)
+    @Type(value = ContentTypeConverter.class)
+    private ContentType type;
+
+    @Column(name = "sequence_number")
+    private Integer sequenceNumber;
 }
