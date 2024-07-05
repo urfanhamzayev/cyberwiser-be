@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Create Organization table -->
+    <changeSet id="02-07-2024-create_organization_table" author="Samadov Nijat">
+        <createTable tableName="organization">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="type" type="organization_type"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create User table -->
+    <changeSet id="02-07-2024-create_user_table" author="Samadov Nijat">
+        <createTable tableName="user">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="organization_id" type="char(32)"/>
+            <column name="name" type="varchar(50)"/>
+            <column name="email" type="varchar(50)"/>
+            <column name="password" type="varchar(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="user" baseColumnNames="organization_id" constraintName="fk_user_organization" referencedTableName="organization"
+        referencedColumnNames="id"/>
+    </changeSet>
+
+
+    <!-- Create Course table -->
+    <changeSet id="02-07-2024-create_course_table" author="Samadov Nijat">
+        <createTable tableName="course">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)"/>
+            <column name="tags" type="varchar(255)"/>
+            <column name="picture_url" type="varchar(255)"/>
+            <column name="organization_id" type="char(32)"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="description" type="TEXT"/>
+            <column name="instructor" type="VARCHAR(255)"/>
+            <column name="duration" type="VARCHAR(50)"/>
+            <column name="is_deleted" type="boolean"/>
+            <column name="is_visible" type="boolean"/>
+            <column name="available_point" type="int"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="course"
+        baseColumnNames="organization_id"
+        constraintName="fk_course_organization"
+        referencedTableName="organization"
+        referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Create Part table -->
+    <changeSet id="02-07-2024-create_part_table" author="Samadov Nijat">
+        <createTable tableName="part">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="video_url" type="VARCHAR(255)"/>
+            <column name="duration" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create Quiz table -->
+    <changeSet id="02-07-2024-create_quiz_table" author="Samadov Nijat">
+        <createTable tableName="quiz">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="number_of_questions" type="INT"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create CourseContent table -->
+    <changeSet id="02-07-2024-create_course_content_table" author="Samadov Nijat">
+        <createTable tableName="course_content">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="course_id" type="char(32)"/>
+            <column name="part_id" type="char(32)"/>
+            <column name="quiz_id" type="char(32)"/>
+            <column name="type" type="content_type"/>
+            <column name="sequence_number" type="int"/>
+
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="course_id"
+                                 baseTableName="course_content"
+                                 constraintName="fk_CourseContent_Course"
+                                 referencedColumnNames="id"
+                                 referencedTableName="course"/>
+    </changeSet>
+
+    <!-- Create Progress table -->
+    <changeSet id="02-07-2024-create_progress_table" author="Samadov Nijat">
+        <createTable tableName="progress">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="char(32)"/>
+            <column name="course_id" type="char(32)"/>
+            <column name="content_id" type="char(32)"/>
+            <column name="lectures_completed" type="INT"/>
+            <column name="quizzes_completed" type="INT"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="progress"
+        baseColumnNames="user_id"
+        constraintName="fk_progress_user"
+        referencedTableName="user"
+        referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="progress"
+        baseColumnNames="course_id"
+        constraintName="fk_progress_course"
+        referencedTableName="course"
+        referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="progress"
+        baseColumnNames="content_id"
+        constraintName="fk_progress_content"
+        referencedTableName="course_content"
+        referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Create Completion table -->
+    <changeSet id="02-07-2024-create_completion_table" author="Samadov Nijat">
+        <createTable tableName="completion">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="char(32)"/>
+            <column name="course_id" type="char(32)"/>
+            <column name="completion_date" type="DATE"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="completion"
+        baseColumnNames="user_id"
+        constraintName="fk_completion_user"
+        referencedTableName="user"
+        referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="completion"
+        baseColumnNames="course_id"
+        constraintName="fk_completion_course"
+        referencedTableName="course"
+        referencedColumnNames="id"/>
+    </changeSet>
+
+
+    <!-- Create CourseAssignment table -->
+    <changeSet id="02-07-2024-create_course_assignment_table" author="Samadov Nijat">
+        <createTable tableName="course_assignment">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="course_id" type="char(32)"/>
+            <column name="organization_id" type="char(32)"/>
+            <column name="assignedDate" type="DATE"/>
+            <column name="confirmed" type="BOOLEAN"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="course_assignment"
+                                 baseColumnNames="course_id"
+                                 constraintName="fk_course_assignment_course"
+                                 referencedTableName="course"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="course_assignment"
+                                 baseColumnNames="organization_id"
+                                 constraintName="fk_course_assignment_organization"
+                                 referencedTableName="organization"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="04-07-2024-create_quiz_section_table" author="Samadov Nijat">
+        <createTable tableName="quiz_section">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="quiz_id" type="char(32)"/>
+            <column name="title" type="varchar(50)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="quiz_section"
+                                 baseColumnNames="quiz_id"
+                                 constraintName="fk_quiz_section_quiz"
+                                 referencedTableName="quiz"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="04-07-2024-create_question_table" author="Samadov Nijat">
+        <createTable tableName="question">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="quiz_section_id" type="char(32)"/>
+            <column name="text" type="varchar(255)"/>
+            <column name="selection_type" type="selection_type"/>
+            <column name="question_option" type="text"/>
+            <column name="correct_option" type="text"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="question"
+                                 baseColumnNames="quiz_section_id"
+                                 constraintName="fk_question_quiz_section"
+                                 referencedTableName="quiz_section"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+    
+</databaseChangeLog>

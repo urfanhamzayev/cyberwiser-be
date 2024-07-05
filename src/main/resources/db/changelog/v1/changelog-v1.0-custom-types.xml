@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="02-07-2024-create_organization_type" author="Samadov Nijat">
+        <sql>
+            CREATE TYPE organization_type AS ENUM ('MAIN', 'SUB');
+        </sql>
+    </changeSet>
+
+    <changeSet id="04-07-2024-create_custom_selection_type" author="Samadov Nijat">
+        <sql>
+            CREATE TYPE selection_type AS ENUM ('SINGLE_SELECTION', 'MULTIPLE_SELECTION');
+        </sql>
+    </changeSet>
+
+    <changeSet id="04-07-2024-content_type" author="Samadov Nijat">
+        <sql>
+            CREATE TYPE content_type AS ENUM ('PART','QUIZ');
+        </sql>
+    </changeSet>
+</databaseChangeLog>
