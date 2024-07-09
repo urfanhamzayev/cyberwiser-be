@@ -18,7 +18,7 @@
 
     <changeSet id="04-07-2024-content_type" author="Samadov Nijat">
         <sql>
-            CREATE TYPE content_type AS ENUM ('PART','QUIZ');
+            CREATE TYPE content_type AS ENUM ('LECTURE','QUIZ');
         </sql>
     </changeSet>
 </databaseChangeLog>

@@ -1,31 +1,40 @@
 package com.phoenix_sat.phoenix_sat_backend.entity;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.converter.OrganizationTypeConverter;
 import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
-import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
+
+import java.util.Date;
 
 @Entity
-@Table(name = "organizations")
+@Table(name = "course_details")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
 @EqualsAndHashCode(callSuper = true)
-public class Organization extends BaseEntity {
+@ToString
+public class CourseDetail extends BaseEntity{
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)
     private String id;
 
-    private String name;
+    @OneToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
 
-    @Enumerated(EnumType.STRING)
-    @Type(value = OrganizationTypeConverter.class)
-    private OrganizationType type;
+    private String name;
+    private Integer sections;
+    private String author;
+
+    @Column(name = "published_date")
+    private Date publishedDate;
+
+    @Column(name = "available_points")
+    private Integer availablePoints;
+
+    private String categories;
 }

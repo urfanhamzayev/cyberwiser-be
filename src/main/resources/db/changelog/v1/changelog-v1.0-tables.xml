@@ -6,18 +6,20 @@
 
     <!-- Create Organization table -->
     <changeSet id="02-07-2024-create_organization_table" author="Samadov Nijat">
-        <createTable tableName="organization">
+        <createTable tableName="organizations">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(255)"/>
             <column name="type" type="organization_type"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
     </changeSet>
 
     <!-- Create User table -->
     <changeSet id="02-07-2024-create_user_table" author="Samadov Nijat">
-        <createTable tableName="user">
+        <createTable tableName="users">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -25,15 +27,17 @@
             <column name="name" type="varchar(50)"/>
             <column name="email" type="varchar(50)"/>
             <column name="password" type="varchar(255)"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="user" baseColumnNames="organization_id" constraintName="fk_user_organization" referencedTableName="organization"
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="organization_id" constraintName="fk_user_organization" referencedTableName="organizations"
         referencedColumnNames="id"/>
     </changeSet>
 
 
     <!-- Create Course table -->
     <changeSet id="02-07-2024-create_course_table" author="Samadov Nijat">
-        <createTable tableName="course">
+        <createTable tableName="courses">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -48,64 +52,72 @@
             <column name="is_deleted" type="boolean"/>
             <column name="is_visible" type="boolean"/>
             <column name="available_point" type="int"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="course"
+        <addForeignKeyConstraint baseTableName="courses"
         baseColumnNames="organization_id"
         constraintName="fk_course_organization"
-        referencedTableName="organization"
+        referencedTableName="organizations"
         referencedColumnNames="id"/>
     </changeSet>
 
     <!-- Create Part table -->
     <changeSet id="02-07-2024-create_part_table" author="Samadov Nijat">
-        <createTable tableName="part">
+        <createTable tableName="lectures">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="title" type="VARCHAR(255)"/>
             <column name="video_url" type="VARCHAR(255)"/>
             <column name="duration" type="VARCHAR(50)"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
     </changeSet>
 
     <!-- Create Quiz table -->
     <changeSet id="02-07-2024-create_quiz_table" author="Samadov Nijat">
-        <createTable tableName="quiz">
+        <createTable tableName="quizzes">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="title" type="VARCHAR(255)"/>
             <column name="number_of_questions" type="INT"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
     </changeSet>
 
     <!-- Create CourseContent table -->
     <changeSet id="02-07-2024-create_course_content_table" author="Samadov Nijat">
-        <createTable tableName="course_content">
+        <createTable tableName="course_contents">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="course_id" type="char(32)"/>
-            <column name="part_id" type="char(32)"/>
+            <column name="lecture_id" type="char(32)"/>
             <column name="quiz_id" type="char(32)"/>
             <column name="type" type="content_type"/>
             <column name="sequence_number" type="int"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
 
         </createTable>
         <addForeignKeyConstraint baseColumnNames="course_id"
-                                 baseTableName="course_content"
-                                 constraintName="fk_CourseContent_Course"
+                                 baseTableName="course_contents"
+                                 constraintName="fk_CourseContent_Courses"
                                  referencedColumnNames="id"
-                                 referencedTableName="course"/>
-        <addForeignKeyConstraint baseTableName="course_content"
-                                 baseColumnNames="part_id"
-                                 constraintName="fk_course_content_part"
-                                 referencedTableName="part"
+                                 referencedTableName="courses"/>
+        <addForeignKeyConstraint baseTableName="course_contents"
+                                 baseColumnNames="lecture_id"
+                                 constraintName="fk_course_content_lectures"
+                                 referencedTableName="lectures"
                                  referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="course_content"
+        <addForeignKeyConstraint baseTableName="course_contents"
                                  baseColumnNames="quiz_id"
                                  constraintName="fk_course_content_quiz"
-                                 referencedTableName="quiz"
+                                 referencedTableName="quizzes"
                                  referencedColumnNames="id"/>
     </changeSet>
 
@@ -120,27 +132,29 @@
             <column name="content_id" type="char(32)"/>
             <column name="lectures_completed" type="INT"/>
             <column name="quizzes_completed" type="INT"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="progress"
         baseColumnNames="user_id"
         constraintName="fk_progress_user"
-        referencedTableName="user"
+        referencedTableName="users"
         referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="progress"
         baseColumnNames="course_id"
-        constraintName="fk_progress_course"
-        referencedTableName="course"
+        constraintName="fk_progress_courses"
+        referencedTableName="courses"
         referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="progress"
         baseColumnNames="content_id"
-        constraintName="fk_progress_content"
-        referencedTableName="course_content"
+        constraintName="fk_progress_contents"
+        referencedTableName="course_contents"
         referencedColumnNames="id"/>
     </changeSet>
 
     <!-- Create Completion table -->
     <changeSet id="02-07-2024-create_completion_table" author="Samadov Nijat">
-        <createTable tableName="completion">
+        <createTable tableName="completions">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -148,22 +162,22 @@
             <column name="course_id" type="char(32)"/>
             <column name="completion_date" type="DATE"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="completion"
+        <addForeignKeyConstraint baseTableName="completions"
         baseColumnNames="user_id"
         constraintName="fk_completion_user"
-        referencedTableName="user"
+        referencedTableName="users"
         referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="completion"
+        <addForeignKeyConstraint baseTableName="completions"
         baseColumnNames="course_id"
-        constraintName="fk_completion_course"
-        referencedTableName="course"
+        constraintName="fk_completion_courses"
+        referencedTableName="courses"
         referencedColumnNames="id"/>
     </changeSet>
 
 
     <!-- Create CourseAssignment table -->
     <changeSet id="02-07-2024-create_course_assignment_table" author="Samadov Nijat">
-        <createTable tableName="course_assignment">
+        <createTable tableName="course_assignments">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -171,37 +185,41 @@
             <column name="organization_id" type="char(32)"/>
             <column name="assignedDate" type="DATE"/>
             <column name="confirmed" type="BOOLEAN"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="course_assignment"
+        <addForeignKeyConstraint baseTableName="course_assignments"
                                  baseColumnNames="course_id"
-                                 constraintName="fk_course_assignment_course"
-                                 referencedTableName="course"
+                                 constraintName="fk_course_assignment_courses"
+                                 referencedTableName="courses"
                                  referencedColumnNames="id"/>
-        <addForeignKeyConstraint baseTableName="course_assignment"
+        <addForeignKeyConstraint baseTableName="course_assignments"
                                  baseColumnNames="organization_id"
-                                 constraintName="fk_course_assignment_organization"
-                                 referencedTableName="organization"
+                                 constraintName="fk_course_assignment_organizations"
+                                 referencedTableName="organizations"
                                  referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="04-07-2024-create_quiz_section_table" author="Samadov Nijat">
-        <createTable tableName="quiz_section">
+        <createTable tableName="quiz_sections">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="quiz_id" type="char(32)"/>
             <column name="title" type="varchar(50)"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
 
-        <addForeignKeyConstraint baseTableName="quiz_section"
+        <addForeignKeyConstraint baseTableName="quiz_sections"
                                  baseColumnNames="quiz_id"
-                                 constraintName="fk_quiz_section_quiz"
-                                 referencedTableName="quiz"
+                                 constraintName="fk_quiz_section_quizzes"
+                                 referencedTableName="quizzes"
                                  referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="04-07-2024-create_question_table" author="Samadov Nijat">
-        <createTable tableName="question">
+        <createTable tableName="questions">
             <column name="id" type="char(32)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -210,11 +228,33 @@
             <column name="selection_type" type="selection_type"/>
             <column name="question_option" type="text"/>
             <column name="correct_option" type="text"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="question"
+        <addForeignKeyConstraint baseTableName="questions"
                                  baseColumnNames="quiz_section_id"
-                                 constraintName="fk_question_quiz_section"
-                                 referencedTableName="quiz_section"
+                                 constraintName="fk_question_quiz_sections"
+                                 referencedTableName="quiz_sections"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="07-07-2024-create_course_detail_table" author="Samadov Nijat">
+        <createTable tableName="course_details">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="course_id" type="char(32)"/>
+            <column name="name" type="varchar(100)"/>
+            <column name="sections" type="int"/>
+            <column name="author" type="varchar(50)"/>
+            <column name="published_date" type="timestamp without timezone"/>
+            <column name="available_points" type="int"/>
+            <column name="categories" type="text"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="course_details"
+                                 baseColumnNames="course_id"
+                                 constraintName="fk_course_details_course"
+                                 referencedTableName="courses"
                                  referencedColumnNames="id"/>
     </changeSet>
     
