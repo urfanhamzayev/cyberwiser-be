@@ -7,15 +7,15 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.Date;
 
 @Entity
-@Table(name = "course_assignment")
+@Table(name = "course_assignments")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
-public class CourseAssignment {
+@EqualsAndHashCode(callSuper = true)
+public class CourseAssignment extends BaseEntity{
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)

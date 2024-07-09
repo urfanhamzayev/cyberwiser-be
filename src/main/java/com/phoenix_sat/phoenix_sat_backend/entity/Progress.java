@@ -13,8 +13,8 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
-public class Progress {
+@EqualsAndHashCode(callSuper = true)
+public class Progress extends BaseEntity{
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)

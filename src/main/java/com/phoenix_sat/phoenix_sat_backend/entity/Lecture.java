@@ -6,14 +6,16 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
-@Table(name = "part")
+@Table(name = "lectures")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-@EqualsAndHashCode
-public class Part {
+@EqualsAndHashCode(callSuper = true)
+@Builder
+public class Lecture extends BaseEntity{
+    // TODO: 07.07.2024 part->lecture 
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)

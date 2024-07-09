@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "completion")
+@Table(name = "completions")
 @Getter
 @Setter
 @AllArgsConstructor

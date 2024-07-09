@@ -4,9 +4,10 @@ import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.context.annotation.Primary;
 
 @Entity
-@Table(name = "quiz")
+@Table(name = "quizzes")
 @Getter
 @Setter
 @AllArgsConstructor
