@@ -1,7 +1,9 @@
 package com.phoenix_sat.phoenix_sat_backend.service;
 
-import org.springframework.stereotype.Service;
+import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
+import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
+import com.phoenix_sat.phoenix_sat_backend.model.response.CourseContentResponse;
 
-@Service
-public class UserService {
+public interface UserService {
+    JwtToken logIn(UserLoginRequest userLoginRequest);
 }

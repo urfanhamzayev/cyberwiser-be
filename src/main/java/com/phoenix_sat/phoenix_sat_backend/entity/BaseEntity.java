@@ -3,7 +3,10 @@ package com.phoenix_sat.phoenix_sat_backend.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 
@@ -20,7 +23,8 @@ public class BaseEntity {
     private Date updateDate;
 
     @PrePersist
-    public void initializeDate(){
-        this.createDate=new Date();
+    public void initializeDate() {
+        this.createDate = new Date();
+        this.updateDate = new Date();
     }
 }

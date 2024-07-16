@@ -14,7 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class Course extends BaseEntity{
+public class Course extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)
@@ -43,4 +43,5 @@ public class Course extends BaseEntity{
 
     @Column(name = "available_point")
     private Integer availablePoint;
+
 }
