@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- Create Organization table -->
@@ -14,6 +14,15 @@
             <column name="type" type="organization_type"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="11-07-2024-create_roles_table" author="Samadov Nijat">
+        <createTable tableName="roles">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="role" type="role_type"/>
         </createTable>
     </changeSet>
 
@@ -30,9 +39,24 @@
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
-        <addForeignKeyConstraint baseTableName="users" baseColumnNames="organization_id" constraintName="fk_user_organization" referencedTableName="organizations"
-        referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="users"
+                                 baseColumnNames="organization_id"
+                                 constraintName="fk_user_organization"
+                                 referencedTableName="organizations"
+                                 referencedColumnNames="id"/>
     </changeSet>
+
+    <changeSet id="11-07-2024-create_user_roles_table" author="Samadov Nijat">
+        <createTable tableName="user_roles">
+            <column name="role_id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 
 
     <!-- Create Course table -->
@@ -56,10 +80,10 @@
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="courses"
-        baseColumnNames="organization_id"
-        constraintName="fk_course_organization"
-        referencedTableName="organizations"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="organization_id"
+                                 constraintName="fk_course_organization"
+                                 referencedTableName="organizations"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <!-- Create Part table -->
@@ -136,20 +160,20 @@
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="progress"
-        baseColumnNames="user_id"
-        constraintName="fk_progress_user"
-        referencedTableName="users"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_progress_user"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="progress"
-        baseColumnNames="course_id"
-        constraintName="fk_progress_courses"
-        referencedTableName="courses"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="course_id"
+                                 constraintName="fk_progress_courses"
+                                 referencedTableName="courses"
+                                 referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="progress"
-        baseColumnNames="content_id"
-        constraintName="fk_progress_contents"
-        referencedTableName="course_contents"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="content_id"
+                                 constraintName="fk_progress_contents"
+                                 referencedTableName="course_contents"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <!-- Create Completion table -->
@@ -163,15 +187,15 @@
             <column name="completion_date" type="DATE"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="completions"
-        baseColumnNames="user_id"
-        constraintName="fk_completion_user"
-        referencedTableName="users"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_completion_user"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="completions"
-        baseColumnNames="course_id"
-        constraintName="fk_completion_courses"
-        referencedTableName="courses"
-        referencedColumnNames="id"/>
+                                 baseColumnNames="course_id"
+                                 constraintName="fk_completion_courses"
+                                 referencedTableName="courses"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
 
@@ -257,5 +281,5 @@
                                  referencedTableName="courses"
                                  referencedColumnNames="id"/>
     </changeSet>
-    
+
 </databaseChangeLog>

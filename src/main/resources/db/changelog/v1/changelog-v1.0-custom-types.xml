@@ -21,4 +21,10 @@
             CREATE TYPE content_type AS ENUM ('LECTURE','QUIZ');
         </sql>
     </changeSet>
+
+    <changeSet id="11-07-2024-role_type" author="Samadov Nijat">
+        <sql>
+            CREATE TYPE role_type AS ENUM ('USER','ADMIN','SUPER_ADMIN');
+        </sql>
+    </changeSet>
 </databaseChangeLog>

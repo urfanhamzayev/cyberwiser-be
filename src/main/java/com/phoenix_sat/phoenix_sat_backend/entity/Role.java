@@ -8,35 +8,21 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
-import java.util.Set;
-
 @Entity
-@Table(name = "users")
+@Table(name = "roles")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode(callSuper = true)
-public class User extends BaseEntity {
+public class Role {
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles",
-            joinColumns ={@JoinColumn(name = "user_id", referencedColumnName = "id")},
-            inverseJoinColumns ={@JoinColumn(name = "role_id", referencedColumnName = "id")}
-    )
-    private Set<Role> roles;
-
-    private String name;
-    private String email;
-    private String password;
+    @Enumerated(EnumType.STRING)
+    @Type(value = RoleTypeConverter.class)
+    private RoleType role;
 }

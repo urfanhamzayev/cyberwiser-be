@@ -19,3 +19,28 @@ spring:
     default-schema: ${PHOENIX_BACKEND_DB_SCHEMA}
     liquibase-schema: ${PHOENIX_BACKEND_DB_SCHEMA}
     enabled: true
+
+
+security:
+  auth:
+    whitelist: >
+      /swagger-resources,
+      /swagger-resources/**,
+      /configuration/ui,  
+      /configuration/security,
+      /swagger-ui.html,
+      /webjars/**,
+      /api/public/**,
+      /v3/api-docs/**,
+      /v3/api-docs,
+      /swagger-ui/**,
+      /v2/api-docs,
+      /api/v1/public/**,
+      /ws-registration/**,
+      /api/v1/public/accounts/**
+
+  jwt:
+    secret-key: ${PHOENIX_BACKEND_JWT_SECRET_KEY}
+app:
+  organization:
+    default-id: ${PHOENIX_BACKEND_DEFAULT_ORGANIZATION_ID}

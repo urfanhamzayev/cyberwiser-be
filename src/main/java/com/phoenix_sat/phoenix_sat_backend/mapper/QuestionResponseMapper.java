@@ -12,7 +12,7 @@ public class QuestionResponseMapper implements Function<Question, QuestionRespon
         return QuestionResponse.builder()
                 .questionId(question.getId())
                 .questionText(question.getText())
-                .questionOptions(question.getQuestionOptions().correctOptions())
+                .questionOptions(question.getQuestionOptions().options())
                 .selectionType(question.getSelectionType())
                 .build();
     }

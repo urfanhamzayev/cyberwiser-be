@@ -15,7 +15,6 @@ import org.hibernate.annotations.GenericGenerator;
 @EqualsAndHashCode(callSuper = true)
 @Builder
 public class Lecture extends BaseEntity{
-    // TODO: 07.07.2024 part->lecture 
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)
