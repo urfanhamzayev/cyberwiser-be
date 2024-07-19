@@ -1,0 +1,18 @@
+name: phoenix-sat-service-local-env
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: sat_backend
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres:/data/postgres
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5442:5432'
+
+volumes:
+  postgres:
+    driver: local
