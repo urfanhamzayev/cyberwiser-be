@@ -207,7 +207,7 @@
             </column>
             <column name="course_id" type="char(32)"/>
             <column name="organization_id" type="char(32)"/>
-            <column name="assignedDate" type="DATE"/>
+            <column name="assigned_date" type="timestamp without timezone"/>
             <column name="confirmed" type="BOOLEAN"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>

@@ -4,7 +4,8 @@ import com.phoenix_sat.phoenix_sat_backend.constant.AppConstants;
 import com.phoenix_sat.phoenix_sat_backend.entity.*;
 import com.phoenix_sat.phoenix_sat_backend.entity.metadata.QuestionOptions;
 import com.phoenix_sat.phoenix_sat_backend.enums.ContentType;
-import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
+import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.mapper.CourseContentResponseMapper;
 import com.phoenix_sat.phoenix_sat_backend.mapper.QuestionResponseMapper;
@@ -17,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,45 +36,23 @@ public class CourseServiceImpl implements CourseService {
     private final LectureRepository lectureRepository;
     private final QuizRepository quizRepository;
     private final UserInfo userInfo;
-    private final OrganizationRepository organizationRepository;
     private final AppConstants appConstants;
+    private final CourseAssignmentRepository courseAssignmentRepository;
+    private final ProgressRepository progressRepository;
 
+    @Transactional
     @Override
-    public CreateCourseResponse create(CreateCourseRequest courseRequest) {
-        Organization organization = userInfo.getUser().getOrganization();
-        Course savedCourse = courseRepository.save(buildCourse(courseRequest, organization));
-        return buildCreateCourseResponse(savedCourse);
-    }
+    public CourseResponse create(CreateCourseRequest courseRequest) {
+        User user = userInfo.getUser();
+        Organization organization = user.getOrganization();
 
-    private static CreateCourseResponse buildCreateCourseResponse(Course savedCourse) {
-        return CreateCourseResponse.builder()
-                .id(savedCourse.getId())
-                .availablePoint(savedCourse.getAvailablePoint())
-                .description(savedCourse.getDescription())
-                .duration(savedCourse.getDuration())
-                .instructor(savedCourse.getInstructor())
-                .isVisible(savedCourse.getIsVisible())
-                .organizationId(savedCourse.getOrganization().getId())
-                .pictureUrl(savedCourse.getPictureUrl())
-                .tags(savedCourse.getTags())
-                .title(savedCourse.getTitle())
-                .build();
-    }
+        Course savedCourse = courseRepository.save(buildCourseByRole(courseRequest, organization));
 
-    private static Course buildCourse(CreateCourseRequest courseRequest, Organization organization) {
-        return Course.builder()
-                .name(courseRequest.name())
-                .organization(organization)
-                .pictureUrl(courseRequest.pictureUrl())
-                .tags(courseRequest.tags())
-                .title(courseRequest.title())
-                .description(courseRequest.description())
-                .instructor(courseRequest.instructor())
-                .duration(courseRequest.duration())
-                .isDeleted(false)
-                .isVisible(true)
-                .availablePoint(courseRequest.availablePoint())
-                .build();
+        CourseAssignment courseAssignment = buildCourseAssignmentByRole(savedCourse, organization);
+
+        courseAssignmentRepository.save(courseAssignment);
+
+        return buildCourseResponse(savedCourse);
     }
 
     @Override
@@ -79,9 +60,12 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(courseId).orElseThrow(() ->
                 new ResourceNotFoundException("Course couldn't find by this id: " + courseId));
 
+        List<CourseContent> courseContentList = courseContentRepository.
+                getCourseContentsByCourseIdOrderBySequenceNumber(course.getId());
 
-        List<CourseContent> courseContentList = courseContentRepository.getCourseContentsByCourseIdOrderBySequenceNumber(course.getId());
-        return courseContentResponseMapper.apply(courseContentList, "Spring sec", 80);
+        Progress progress = progressRepository.findByUserId(userInfo.getUser().getId()).orElse(null);
+        Integer progressRate = getProgressRate(progress);
+        return courseContentResponseMapper.apply(courseContentList, course.getTitle(), progressRate);
     }
 
     @Override
@@ -113,10 +97,12 @@ public class CourseServiceImpl implements CourseService {
     public LectureResponse addLecture(CreateLectureRequest createLectureRequest) {
         Course course = courseRepository.findById(createLectureRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createLectureRequest.courseId()));
+
+        if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
+            throw new AuthenticationException("You can't add lecture to another organization's course");
+
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseId(course.getId());
-
         Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest));
-
         courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
 
         return LectureResponseBuilder(lecture);
@@ -126,6 +112,9 @@ public class CourseServiceImpl implements CourseService {
     public QuizResponse addQuiz(CreateQuizRequest createQuizRequest) {
         Course course = courseRepository.findById(createQuizRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createQuizRequest.courseId()));
+
+        if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
+            throw new AuthenticationException("You can't add quiz to another organization's course");
 
         Quiz quiz = quizRepository.save(buildQuiz(createQuizRequest));
 
@@ -143,15 +132,49 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public Page<Course> getCoursePage(CourseFilterRequest courseFilterRequest, Pageable pageable) {
+    public Page<CourseResponse> getCoursePage(CourseFilterRequest courseFilterRequest, Pageable pageable) {
         courseFilterRequest.setOrganizationId(userInfo.getUser().getOrganization().getId());
 
-        Organization mainOrganization = organizationRepository.findByType(OrganizationType.MAIN).orElseThrow(() ->
-                new ResourceNotFoundException("Organization not found with type MAIN"));
+        CourseSpecification courseSpecification = new CourseSpecification(isSuperAdmin(),
+                courseFilterRequest,
+                appConstants.getDefaultId());
 
-        CourseSpecification courseSpecification = new CourseSpecification(courseFilterRequest, appConstants.getDefaultId());
+        return courseRepository.findAll(courseSpecification, pageable).map(CourseServiceImpl::buildCourseResponse);
+    }
 
-        return courseRepository.findAll(courseSpecification, pageable);
+    @Override
+    @Transactional
+    public CourseResponse confirmCourseAssignment(String courseId) {
+        var courseAssignment = courseAssignmentRepository.findByCourseId(courseId).orElseThrow(() ->
+                new ResourceNotFoundException("CourseAssignment not found with this courseId: " + courseId));
+
+        courseAssignment.setConfirmed(true);
+        courseAssignmentRepository.save(courseAssignment);
+
+        return buildCourseResponse(courseAssignment.getCourse());
+    }
+
+    @Override
+    @Transactional
+    public void delete(String courseId) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() ->
+                new ResourceNotFoundException("Course not found with this id: " + courseId));
+
+        if (!userInfo.getUser().getOrganization().getId().equals(course.getOrganization().getId()))
+            throw new AuthenticationException("You can't delete another organization's course.");
+
+        course.setIsVisible(false);
+        courseRepository.save(course);
+    }
+
+    private Integer getProgressRate(Progress progress) {
+        if (progress == null)
+            return 0;
+
+        int completedParts = progress.getLecturesCompleted() + progress.getQuizzesCompleted();
+        Integer allParts = courseContentRepository.findLastSequenceNumberByCourseId(progress.getCourse().getId());
+
+        return (completedParts * 100) / allParts;
     }
 
     private static int getIncorrectCount(QuizCompleteRequest quizCompleteRequest, List<Question> questions) {
@@ -168,6 +191,22 @@ public class CourseServiceImpl implements CourseService {
             }
         }
         return incorrectCount;
+    }
+
+    private Boolean isSuperAdmin() {
+        for (Role role : userInfo.getUser().getRoles()) {
+            if (role.getRole() == RoleType.SUPER_ADMIN)
+                return true;
+        }
+        return false;
+    }
+
+    private Boolean isAdmin() {
+        for (Role role : userInfo.getUser().getRoles()) {
+            if (role.getRole() == RoleType.ADMIN)
+                return true;
+        }
+        return false;
     }
 
     private static QuizResponse buildQuizResponse(CreateQuizRequest createQuizRequest, Quiz quiz) {
@@ -227,7 +266,7 @@ public class CourseServiceImpl implements CourseService {
         var courseContent = CourseContent.builder()
                 .course(course)
                 .type(ContentType.QUIZ)
-                .sequenceNumber(lastSequence==null ? 1: lastSequence+1)
+                .sequenceNumber(lastSequence == null ? 1 : lastSequence + 1)
                 .build();
         if (content instanceof Lecture)
             courseContent.setLecture((Lecture) content);
@@ -248,6 +287,67 @@ public class CourseServiceImpl implements CourseService {
         return Quiz.builder()
                 .numberOfQuestions(createQuizRequest.numberOfQuestions())
                 .title(createQuizRequest.quizTitle())
+                .build();
+    }
+
+    private CourseAssignment buildCourseAssignmentByRole(Course savedCourse,
+                                                         Organization organization) {
+        if (isSuperAdmin())
+            return buildCourseAssignment(savedCourse, organization, false);
+
+        return buildCourseAssignment(savedCourse, organization, true);
+    }
+
+
+    private CourseAssignment buildCourseAssignment(Course savedCourse, Organization organization, Boolean confirmed) {
+        return CourseAssignment.builder()
+                .organization(organization)
+                .assignedDate(new Date())
+                .course(savedCourse)
+                .confirmed(confirmed)
+                .build();
+    }
+
+    private static CourseResponse buildCourseResponse(Course course) {
+        return CourseResponse.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .tags(course.getTags())
+                .title(course.getTitle())
+                .pictureUrl(course.getPictureUrl())
+                .organizationName(course.getOrganization().getName())
+                .availablePoint(course.getAvailablePoint())
+                .description(course.getDescription())
+                .duration(course.getDuration())
+                .instructor(course.getInstructor())
+                .isVisible(course.getIsVisible())
+                .build();
+    }
+
+    private Course buildCourseByRole(CreateCourseRequest courseRequest, Organization organization) {
+        if (isAdmin()) {
+            return getCourse(courseRequest, organization, true);
+        }
+        if (isSuperAdmin()) {
+            return getCourse(courseRequest, organization, false);
+        }
+        return null;
+
+    }
+
+    private static Course getCourse(CreateCourseRequest courseRequest, Organization organization, Boolean isVisible) {
+        return Course.builder()
+                .name(courseRequest.name())
+                .organization(organization)
+                .pictureUrl(courseRequest.pictureUrl())
+                .tags(courseRequest.tags())
+                .title(courseRequest.title())
+                .description(courseRequest.description())
+                .instructor(courseRequest.instructor())
+                .duration(courseRequest.duration())
+                .isDeleted(false)
+                .isVisible(isVisible)
+                .availablePoint(courseRequest.availablePoint())
                 .build();
     }
 }

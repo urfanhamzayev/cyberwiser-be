@@ -1,6 +1,7 @@
 package com.phoenix_sat.phoenix_sat_backend.error;
 
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.NullValueException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -34,6 +35,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleAuthenticationException(AuthenticationException e) {
         return new ErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage());
+    }
+
+    @ExceptionHandler(NullValueException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNullValueException(NullValueException e) {
+        return new ErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
     }
 
 
