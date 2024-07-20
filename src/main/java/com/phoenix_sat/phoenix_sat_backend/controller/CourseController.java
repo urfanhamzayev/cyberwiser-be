@@ -22,6 +22,10 @@ import java.util.List;
 public class CourseController {
     private final CourseService courseService;
 
+    // TODO:
+       // 1) User can only see their comfirmed course
+       // 2)  Admin can see only his course, assidned by super admin course both (comfirmed/not comfirmed)
+       // 3) Super admin can see only main course
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public CourseResponse create(@RequestBody CreateCourseRequest courseRequest) {

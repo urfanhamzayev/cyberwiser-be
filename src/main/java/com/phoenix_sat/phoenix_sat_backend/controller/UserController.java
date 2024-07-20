@@ -15,6 +15,12 @@ public class UserController {
     private final UserServiceImpl userServiceImpl;
 
 
-
+   // TODO:
+      // 1 ) User information for setting part (All detail,profile picture)
+      // 2)  User report . How many course completed, how many is progressing , and so on.
+     //  3)  Organization level user report, track report of all userr progress
+    //   4)  Batch import users and send invitation for user creation
+     //  5)  Add one user for creation
+     //  6)  Deactivate User once left the company
 
 }

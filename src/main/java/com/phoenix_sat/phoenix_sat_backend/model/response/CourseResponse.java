@@ -15,3 +15,5 @@ public record CourseResponse(String id,
                              Integer availablePoint,
                              String organizationName) {
 }
+   // TODO: Need to add isCompleted field. user can see which one is completed in the full list of course
+    // organizationName no need

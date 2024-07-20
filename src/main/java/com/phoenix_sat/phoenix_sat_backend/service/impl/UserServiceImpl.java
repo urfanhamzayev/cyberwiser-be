@@ -24,6 +24,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public JwtToken logIn(UserLoginRequest userLoginRequest) {
+         // TODO:
+           // Need to check user is active
         User user = userRepository.findByEmail(userLoginRequest.email()).orElseThrow(() ->
                 new ResourceNotFoundException("User not found with this email: " + userLoginRequest.email()));
         boolean isMatch = passwordEncoder.matches(userLoginRequest.password(), user.getPassword());

@@ -28,4 +28,12 @@ public class Organization extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Type(value = OrganizationTypeConverter.class)
     private OrganizationType type;
+
+     // TODO: Need to add
+     // , description;
+     // , phoneNumber;
+     //, numEmployees;
+     // country
+    // email
+    // industry
 }
