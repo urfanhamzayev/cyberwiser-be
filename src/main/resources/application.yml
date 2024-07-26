@@ -22,8 +22,9 @@ spring:
   batch:
     job:
       enabled: false
-  main:
-    allow-bean-definition-overriding: true
+    jdbc:
+      initialize-schema: always
+
 
 
 security:

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 @Configuration
-@EnableBatchProcessing
+//@EnableBatchProcessing
 @RequiredArgsConstructor
 public class BatchConfig {
     private final JobRepository jobRepository;

@@ -1,6 +1,8 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
+import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.Chunk;
@@ -10,12 +12,18 @@ import org.springframework.batch.item.ItemWriter;
 
 public class UserItemWriter implements ItemWriter<User> {
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
 
     @Override
     public void write(Chunk<? extends User> items) throws Exception {
         if (items.isEmpty())
             return;
 
+        String organizationId = items.getItems().get(0).getOrganizationId();
+        Organization organization = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        items.forEach(item -> item.setOrganization(organization));
         userRepository.saveAll(items);
     }
 }

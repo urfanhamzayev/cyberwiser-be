@@ -11,6 +11,7 @@ import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import com.phoenix_sat.phoenix_sat_backend.service.FileService;
 import com.phoenix_sat.phoenix_sat_backend.service.OrganizationService;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.batch.core.Job;
@@ -33,6 +34,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final FileService fileService;
     private final JobLauncher jobLauncher;
     private final Job userCsvImportJob;
+
+    @Resource(name = "requestScopedUser")
+    UserInfo currentUserInfo;
 
     public OrganizationServiceImpl(OrganizationRepository organizationRepository,
                                    UserRepository userRepository,
@@ -69,7 +73,6 @@ public class OrganizationServiceImpl implements OrganizationService {
     @SneakyThrows
     @Override
     public void importUsersFromFile(MultipartFile file) {
-
 //        try {
 //            String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
 //            fileService.saveFile(file.getBytes(), fileName);
@@ -91,6 +94,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         fileService.saveFile(file.getBytes(), fileName);
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("filename", fileName)
+                .addString("organizationId", currentUserInfo.getOrganization().getId())
                 .toJobParameters();
 
         jobLauncher.run(userCsvImportJob, jobParameters);

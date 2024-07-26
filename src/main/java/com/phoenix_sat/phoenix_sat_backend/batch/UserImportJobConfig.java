@@ -38,39 +38,42 @@ public class UserImportJobConfig {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final PlatformTransactionManager platformTransactionManager;
-    private final OrganizationRepository organizationRepository;
     private final RoleRepository roleRepository;
+    private final OrganizationRepository organizationRepository;
 
     @Bean
     @StepScope
     @SneakyThrows
-    public FlatFileItemReader<UserRequest> userRequestFlatFileItemReader(@Value("#{jobParameters[filename]}") String filename) {
+    public FlatFileItemReader<UserRequest> userRequestFlatFileItemReader(@Value("#{jobParameters[filename]}") String filename,
+                                                                         @Value("#{jobParameters[organizationId]}") String organizationId) {
         FlatFileItemReader<UserRequest> reader = new FlatFileItemReader<>();
         reader.setResource(new InputStreamResource(new FileInputStream(fileService.getFile(filename))));
         reader.setName("User-CSV-Reader");
         reader.setLinesToSkip(1);
-        reader.setLineMapper(lineMapper());
+        reader.setLineMapper(lineMapper(organizationId));
         return reader;
     }
 
-    private LineMapper<UserRequest> lineMapper() {
+    private LineMapper<UserRequest> lineMapper(String organizationId) {
         DefaultLineMapper<UserRequest> lineMapper = new DefaultLineMapper<>();
 
         DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
         lineTokenizer.setDelimiter(",");
         lineTokenizer.setStrict(false);
-        lineTokenizer.setNames("organizationId", "role", "name", "email");
+        lineTokenizer.setNames("name", "email", "role");
 
         lineMapper.setLineTokenizer(lineTokenizer);
-        lineMapper.setFieldSetMapper(new UserFieldMapper());
+        lineMapper.setFieldSetMapper(new UserFieldMapper(organizationId));
 
         return lineMapper;
     }
 
     @Bean("userCsvImportStep")
     @JobScope
-    public Step importUserCsvStep(FlatFileItemReader<UserRequest> reader, @Qualifier("userItemProcessor") ItemProcessor<UserRequest, User> processor, UserItemWriter writer) {
-        return new StepBuilder("userCsvImport", jobRepository)
+    public Step importUserCsvStep(FlatFileItemReader<UserRequest> reader,
+                                  @Qualifier("userItemProcessor") ItemProcessor<UserRequest, User> processor,
+                                  @Qualifier("userItemWriter") UserItemWriter writer) {
+        return new StepBuilder("userCsvImportStep", jobRepository)
                 .<UserRequest, User>chunk(10, platformTransactionManager)
                 .reader(reader)
                 .processor(processor)
@@ -95,12 +98,12 @@ public class UserImportJobConfig {
     @Bean
     @StepScope
     public UserItemWriter userItemWriter() {
-        return new UserItemWriter(this.userRepository);
+        return new UserItemWriter(this.userRepository, this.organizationRepository);
     }
 
     @Bean("userItemProcessor")
     @StepScope
     public ItemProcessor<UserRequest, User> userItemProcessor() {
-        return new UserItemProcessor(roleRepository, organizationRepository);
+        return new UserItemProcessor(roleRepository);
     }
 }

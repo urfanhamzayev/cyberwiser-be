@@ -10,12 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserFieldMapper implements FieldSetMapper<UserRequest> {
+
+    private final String organizationId;
+
+    public UserFieldMapper(String organizationId) {
+        this.organizationId = organizationId;
+    }
+
     @Override
     public UserRequest mapFieldSet(FieldSet fieldSet) throws BindException {
         return UserRequest.builder()
+                .organizationId(organizationId)
                 .name(fieldSet.readString("name"))
                 .email(fieldSet.readString("email"))
-                .organizationId("organizationId")
                 .roleType(getRole(fieldSet.readString("role")))
                 .build();
     }

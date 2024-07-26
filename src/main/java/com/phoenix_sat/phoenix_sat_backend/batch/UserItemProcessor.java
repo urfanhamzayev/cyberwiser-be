@@ -1,52 +1,40 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.Role;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
-import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRequest;
-import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.RoleRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
-@Component
+
 @RequiredArgsConstructor
 public class UserItemProcessor implements ItemProcessor<UserRequest, User> {
 
     private final RoleRepository roleRepository;
-    private final OrganizationRepository organizationRepository;
+    private List<Role> defaultRoles;
 
+    @PostConstruct
+    public void init() {
+        defaultRoles = roleRepository.findAll();
+    }
 
     @Override
-    public User process(UserRequest item) throws Exception {
+    public User process(UserRequest userRow) throws Exception {
+        System.out.println("User's organization id is " + userRow.organizationId());
         return User.builder()
-                .email(item.email())
-                .roles(getRolesByRoleTypes(item.roleType()))
-                .organization(getOrganizationById(item.organizationId()))
-                .name(item.name())
+                .email(userRow.email())
+                .roles(defaultRoles.stream()
+                        .filter(role -> userRow.roleType().contains(role.getRole()))
+                        .collect(Collectors.toSet())
+                )
+                .organizationId(userRow.organizationId())
+                .name(userRow.name())
                 .build();
     }
 
-    private Organization getOrganizationById(String orgId) {
-        return organizationRepository.findById(orgId).orElseThrow(() ->
-                new ResourceNotFoundException("Organization not found with this id:" + orgId));
-    }
-
-    private Set<Role> getRolesByRoleTypes(List<RoleType> roleTypeList) {
-        Set<Role> roles = new HashSet<>();
-        for (RoleType roleType : roleTypeList) {
-            Role role = roleRepository.findByRole(roleType).orElseThrow(() ->
-                    new ResourceNotFoundException("Role not found with this roleType:" + roleType));
-            roles.add(role);
-
-        }
-        return roles;
-    }
 }

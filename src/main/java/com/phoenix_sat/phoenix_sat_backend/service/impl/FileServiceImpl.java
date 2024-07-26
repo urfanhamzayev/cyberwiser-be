@@ -12,7 +12,7 @@ import java.io.IOException;
 
 @Service
 public class FileServiceImpl implements FileService {
-    public static final String RESOURCE_PATH = "C:\\Users\\HP\\OneDrive - The Academy of Public Administration under the President of the Republic of Azerbaijan\\Documents\\";
+    public static final String RESOURCE_PATH = "D:/basic-notepad/";
 
     @Override
     @SneakyThrows
