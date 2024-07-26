@@ -7,8 +7,14 @@
     <changeSet id="08-07-2024-insert_organization" author="Samadov Nijat">
         <insert tableName="organizations">
             <column name="id" value="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"/>
-            <column name="name" value="Organization Name"/>
+            <column name="name" value="Phoenix"/>
+            <column name="email" value="main@phoenix.com"/>
             <column name="type" value="MAIN"/>
+            <column name="description" value="This is main Organization"/>
+            <column name="phone_number" value="+9940502118585"/>
+            <column name="num_employees" value="1"/>
+            <column name="country" value="Azerbaijan"/>
+            <column name="industry" value="Information Tech"/>
             <column name="create_date" valueDate="2024-07-08T00:00:00"/>
             <column name="update_date" valueDate="2024-07-08T00:00:00"/>
         </insert>
@@ -17,7 +23,7 @@
     <changeSet id="08-07-2024-insert_course" author="Samadov Nijat">
         <insert tableName="courses">
             <column name="id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
-            <column name="name" value="Course Name"/>
+            <column name="name" value="First Main Default Course"/>
             <column name="tags" value="tag1,tag2"/>
             <column name="picture_url" value="http://example.com/picture.jpg"/>
             <column name="organization_id" value="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"/>
@@ -169,7 +175,8 @@
             <column name="quiz_section_id" value="dwv2e3r4t5y6u7i8o9p0a1s2d3f4g5h2"/>
             <column name="text" value="What is the capital of France?"/>
             <column name="selection_type" value="SINGLE_SELECTION"/>
-            <column name="question_option" value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
             <column name="correct_option" value="{&quot;options&quot;:[&quot;Paris&quot;]}"/>
             <column name="create_date" value="2024-07-11T00:00:00"/>
             <column name="update_date" value="2024-07-11T00:00:00"/>
@@ -179,7 +186,8 @@
             <column name="quiz_section_id" value="dwv2e3r4t5y6u7i8o9p0a1s2d3f4g5h2"/>
             <column name="text" value="What is the capital of Germany?"/>
             <column name="selection_type" value="SINGLE_SELECTION"/>
-            <column name="question_option" value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
             <column name="correct_option" value="{&quot;options&quot;:[&quot;Berlin&quot;]}"/>
             <column name="create_date" value="2024-07-11T00:00:00"/>
             <column name="update_date" value="2024-07-11T00:00:00"/>
@@ -189,7 +197,8 @@
             <column name="quiz_section_id" value="dwv2e3r4t5y6u7i8o9p0a1s2d3f4g5h2"/>
             <column name="text" value="What is the capital of Italy?"/>
             <column name="selection_type" value="SINGLE_SELECTION"/>
-            <column name="question_option" value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
             <column name="correct_option" value="{&quot;options&quot;:[&quot;Rome&quot;]}"/>
             <column name="create_date" value="2024-07-11T00:00:00"/>
             <column name="update_date" value="2024-07-11T00:00:00"/>
@@ -199,7 +208,8 @@
             <column name="quiz_section_id" value="dwv2e3r4t5y6u7i8o9p0a1s2d3f4g5h2"/>
             <column name="text" value="What is the capital of Spain?"/>
             <column name="selection_type" value="SINGLE_SELECTION"/>
-            <column name="question_option" value="{&quot;options&quot;:[&quot;Madrid&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Madrid&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
             <column name="correct_option" value="{&quot;options&quot;:[&quot;Madrid&quot;]}"/>
             <column name="create_date" value="2024-07-11T00:00:00"/>
             <column name="update_date" value="2024-07-11T00:00:00"/>
@@ -209,7 +219,8 @@
             <column name="quiz_section_id" value="dwv2e3r4t5y6u7i8o9p0a1s2d3f4g5h2"/>
             <column name="text" value="Which are planet?"/>
             <column name="selection_type" value="MULTIPLE_SELECTION"/>
-            <column name="question_option" value="{&quot;options&quot;:[&quot;Jupiter&quot;,&quot;Prometeus&quot;,&quot;Black hole&quot;,&quot;Earth&quot;]}"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Jupiter&quot;,&quot;Prometeus&quot;,&quot;Black hole&quot;,&quot;Earth&quot;]}"/>
             <column name="correct_option" value="{&quot;options&quot;:[&quot;Jupiter&quot;,&quot;Earth&quot;]}"/>
             <column name="create_date" value="2024-07-11T00:00:00"/>
             <column name="update_date" value="2024-07-11T00:00:00"/>
@@ -221,19 +232,32 @@
         <insert tableName="organizations">
             <column name="id" value="qw2er3tyu2io561qaz2wsx3edc4r1234"/>
             <column name="name" value="Kapital Bank"/>
+            <column name="email" value="kapitalhost@kapital.az"/>
             <column name="type" value="SUB"/>
+            <column name="description" value="This is Kapital Organization"/>
+            <column name="phone_number" value="+9940502112222"/>
+            <column name="num_employees" value="10000"/>
+            <column name="country" value="Azerbaijan"/>
+            <column name="industry" value="Bank"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
         <insert tableName="organizations">
             <column name="id" value="tyuio5789qwer61qaz2wsx3edc4r1234"/>
             <column name="name" value="ABB"/>
+            <column name="email" value="abbhost@abb.az"/>
             <column name="type" value="SUB"/>
+            <column name="description" value="This is Abb Organization"/>
+            <column name="phone_number" value="+9940502118585"/>
+            <column name="num_employees" value="8000"/>
+            <column name="country" value="Azerbaijan"/>
+            <column name="industry" value="Bank"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
     </changeSet>
-    
+
+
     <changeSet id="14-07-2024-insert-admins-from-different-organizations" author="Samadov Nijat">
         <insert tableName="users">
             <column name="id" value="56789qwertyuio1qaz2wsx3edc4r1234"/>
@@ -241,6 +265,8 @@
             <column name="name" value="Admin Abb"/>
             <column name="email" value="adminAbb@gmail.com"/>
             <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="picture_url" value="http://example.com/picture.jpg"/>
+            <column name="is_active" value="true"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
@@ -250,6 +276,8 @@
             <column name="name" value="Admin Kapital"/>
             <column name="email" value="adminKapital@gmail.com"/>
             <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="picture_url" value="http://example.com/picture.jpg"/>
+            <column name="is_active" value="true"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
@@ -273,6 +301,8 @@
             <column name="name" value="User Abb"/>
             <column name="email" value="userAbb@gmail.com"/>
             <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="picture_url" value="http://example.com/picture.jpg"/>
+            <column name="is_active" value="true"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
@@ -282,6 +312,8 @@
             <column name="name" value="User Kapital"/>
             <column name="email" value="userKapital@gmail.com"/>
             <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="picture_url" value="http://example.com/picture.jpg"/>
+            <column name="is_active" value="true"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
@@ -296,7 +328,7 @@
             <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
         </insert>
     </changeSet>
-    
+
     <changeSet id="17-07-2024-insert_super_admin" author="Samadov Nijat">
         <insert tableName="users">
             <column name="id" value="3z2wsx3edc4r124f4e89qw4t5y6io1qa"/>
@@ -304,6 +336,8 @@
             <column name="name" value="Urfan Hamzayev"/>
             <column name="email" value="urfanhamzaev@gmail.com"/>
             <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="picture_url" value="http://example.com/picture.jpg"/>
+            <column name="is_active" value="true"/>
             <column name="create_date" value="now()"/>
             <column name="update_date" value="now()"/>
         </insert>
@@ -313,6 +347,436 @@
         </insert>
     </changeSet>
 
+    <changeSet id="22-07-2024-insert_courses_sub_organizations" author="Samadov Nijat">
+        <insert tableName="courses">
+            <column name="id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="name" value="First Kapital Sub Org Default Course"/>
+            <column name="tags" value="tag2,tag7"/>
+            <column name="picture_url" value="http://example.com/picture6.jpg"/>
+            <column name="organization_id" value="qw2er3tyu2io561qaz2wsx3edc4r1234"/>
+            <column name="title" value="Kapital first course"/>
+            <column name="description" value="Kapital Course description"/>
+            <column name="instructor" value="Someone2"/>
+            <column name="duration" value="3 weeks"/>
+            <column name="is_deleted" value="false"/>
+            <column name="is_visible" value="true"/>
+            <column name="available_point" value="150"/>
+            <column name="create_date" valueDate="now()"/>
+            <column name="update_date" valueDate="now()"/>
+        </insert>
+    </changeSet>
+
+    <!--  Insert course for course contents of KAPITAL  -->
+
+    <changeSet id="22-07-2024-insert_lectures_for_kapital_org" author="Samadov Nijat">
+        <insert tableName="lectures">
+            <column name="id" value="1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l2k"/>
+            <column name="title" value="Lecture 1"/>
+            <column name="video_url" value="http://example.com/video1.mp4"/>
+            <column name="duration" value="30 minutes"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+        <insert tableName="lectures">
+            <column name="id" value="2k1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l"/>
+            <column name="title" value="Lecture 2"/>
+            <column name="video_url" value="http://example.com/video2.mp4"/>
+            <column name="duration" value="45 minutes"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+        <insert tableName="lectures">
+            <column name="id" value="7c8d9e0f1g2h3i4j55a6bk6l7m8n9o0p"/>
+            <column name="title" value="Lecture 3"/>
+            <column name="video_url" value="http://example.com/video3.mp4"/>
+            <column name="duration" value="25 minutes"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+        <insert tableName="lectures">
+            <column name="id" value="f9e8d7c6b5a49o8n7m6l5k4j3i2h1g0p"/>
+            <column name="title" value="Lecture 4"/>
+            <column name="video_url" value="http://example.com/video4.mp4"/>
+            <column name="duration" value="40 minutes"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+        <insert tableName="lectures">
+            <column name="id" value="0j1i2h3g4f5e6d7c8b9a4p5o6n7m8l9k"/>
+            <column name="title" value="Lecture 5"/>
+            <column name="video_url" value="http://example.com/video5.mp4"/>
+            <column name="duration" value="35 minutes"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="22-07-2024-insert_quiz_for_kapital_org" author="Samadov Nijat">
+        <insert tableName="quizzes">
+            <column name="id" value="r4t5y6u7i8o9p0a1q1w2e3s2d3f4g5h2"/>
+            <column name="title" value="Quiz Title"/>
+            <column name="number_of_questions" value="10"/>
+            <column name="create_date" valueDate="2024-07-08T00:00:00"/>
+            <column name="update_date" valueDate="2024-07-08T00:00:00"/>
+        </insert>
+    </changeSet>
 
 
+    <changeSet id="22-07-2024-insert-course_contents_for_kapital_course" author="Samadov Nijat">
+        <insert tableName="course_contents">
+            <column name="id" value="1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l2k"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="lecture_id" value="1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l2k"/>
+            <column name="type" value="LECTURE"/>
+            <column name="sequence_number" value="1"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+        <insert tableName="course_contents">
+            <column name="id" value="g5hp3iu73r4t5y6u7i8o9p0a1s2d3f4"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="lecture_id" value="2k1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l"/>
+            <column name="type" value="LECTURE"/>
+            <column name="sequence_number" value="2"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+        <insert tableName="course_contents">
+            <column name="id" value="a1sad2f5hr4t5y6u7i8o9p02d3f4g5h"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="lecture_id" value="7c8d9e0f1g2h3i4j55a6bk6l7m8n9o0p"/>
+            <column name="type" value="LECTURE"/>
+            <column name="sequence_number" value="3"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+        <insert tableName="course_contents">
+            <column name="id" value="g4rt5ym6l5k4j3i2h10f9e8d7c6b5a4p"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="lecture_id" value="f9e8d7c6b5a49o8n7m6l5k4j3i2h1g0p"/>
+            <column name="type" value="LECTURE"/>
+            <column name="sequence_number" value="4"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+        <insert tableName="course_contents">
+            <column name="id" value="2w3n7m0f9e8d7c6b5a46l5k4j3i2h1gp"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="quiz_id" value="r4t5y6u7i8o9p0a1q1w2e3s2d3f4g5h2"/>
+            <column name="type" value="QUIZ"/>
+            <column name="sequence_number" value="5"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+        <insert tableName="course_contents">
+            <column name="id" value="a3r1n7m8l9k0jd1i2h3g4f5e6d7c8b9a"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="lecture_id" value="0j1i2h3g4f5e6d7c8b9a4p5o6n7m8l9k"/>
+            <column name="type" value="LECTURE"/>
+            <column name="sequence_number" value="6"/>
+            <column name="create_date" value="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="23-07-2024-insert_progress_records_for_sub_org_course" author="Samadov Nijat">
+        <!--insert for admin kapital-->
+        <insert tableName="progress">
+            <column name="id" value="1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l2k"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="2a3b4c5d6e7f8g9h0i1j2k3l4m5n6o7p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="g5hp3iu73r4t5y6u7i8o9p0a1s2d3f4"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="3a4b5c6d7e8f9g0h1i2j3k4l5m6n7o8p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="a1sad2f5hr4t5y6u7i8o9p02d3f4g5h"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="4a5b6c7d8e9f0g1h2i3j4k5l6m7n8o9p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="g4rt5ym6l5k4j3i2h10f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="5a6b7c8d9e0f1g2h3i4j5k6l7m8n9o0p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="2w3n7m0f9e8d7c6b5a46l5k4j3i2h1gp"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="a3r1n7m8l9k0jd1i2h3g4f5e6d7c8b9a"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+
+        <!--insert for user kapital-->
+        <insert tableName="progress">
+            <column name="id" value="g8h91a2b3c4d5e6f7i0j1k2l3m4n5o6p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="1j0i9h8g7f6e5d4c3b2a1p6o5n4m3l2k"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="i2a3b4c5d6e7f8g9h01j2k3l4m5n6o7p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="g5hp3iu73r4t5y6u7i8o9p0a1s2d3f4"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="2j3k3a4b5c6d7e8f9g0h1i4l5m6n7o8p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="a1sad2f5hr4t5y6u7i8o9p02d3f4g5h"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="5l64a5b6c7d8e9f0g1h2i3j4km7n8o9p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="g4rt5ym6l5k4j3i2h10f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="n9o5a6b7c8d9e0f1g2h3i4j5k6l7m80p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="2w3n7m0f9e8d7c6b5a46l5k4j3i2h1gp"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="a7b8c9d0e1f2g3h46i5j6k7l8m9n0o1p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="content_id" value="a3r1n7m8l9k0jd1i2h3g4f5e6d7c8b9a"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="23-07-2024-insert_course_assignment_exist_course" author="Samadov Nijat">
+        <insert tableName="course_assignments">
+            <column name="id" value="4r12z2wsx3edc34f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="organization_id" value="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"/>
+            <column name="assigned_date" value="now()"/>
+            <column name="confirmed" value="true"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="course_assignments">
+            <column name="id" value="x3dc34f4e89qw4t5y6ioe4r12z2ws1qa"/>
+            <column name="course_id" value="d4c3b2a1p6o5n4m3l2k1j0i9h8g7f6e5"/>
+            <column name="organization_id" value="qw2er3tyu2io561qaz2wsx3edc4r1234"/>
+            <column name="assigned_date" value="now()"/>
+            <column name="confirmed" value="true"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="24-07-2024-insert_progress_for_main_org_course" author="Samadov Nijat">
+        <!--insert for admin kapital-->
+        <insert tableName="progress">
+            <column name="id" value="io1qaz2d2w56sx3edc4r123qwe4789yu"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="iuj6e3r4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="w21qaz2d2w56sx3edc4r123qwe4789yu"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="p3iu73r4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="r44b5c6d7e8f9g0h1i2j3k4l5m6n7o8p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="ad2f5hr4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="t55b6c7d8e9f0g1h2i3j4k5l6m7n8o9p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="4rt5ym6l5k4j3i2h1g0f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="y76b7c8d9e0f1g2h3i4j5k6l7m8n9o0p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="2w3n7m6l5k4j3i2h1g0f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="u87b8c9d0e1f2g3h4i5j6k7l8m9n0o1p"/>
+            <column name="user_id" value="789qwertyuio1qaz2w56sx3edc4r1234"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="ad3r1n7m8l9k0j1i2h3g4f5e6d7c8b9a"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+
+        <!--insert for user kapital-->
+        <insert tableName="progress">
+            <column name="id" value="c0h91a2b3c4d5e6f7i0j1k2l3m4n5o6p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="iuj6e3r4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="ioa3b4c5d6e7f8g9h01j2k3l4m5n6o7p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="p3iu73r4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="1e3k3a4b5c6d7e8f9g0h1i4l5m6n7o8p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="ad2f5hr4t5y6u7i8o9p0a1s2d3f4g5h "/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="i964a5b6c7d8e9f0g1h2i3j4km7n8o9p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="4rt5ym6l5k4j3i2h1g0f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="ppo5a6b7c8d9e0f1g2h3i4j5k6l7m80p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="2w3n7m6l5k4j3i2h1g0f9e8d7c6b5a4p"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+        <insert tableName="progress">
+            <column name="id" value="sib8c9d0e1f2g3h46i5j6k7l8m9n0o1p"/>
+            <column name="user_id" value="z2wsx3edc4r1234f4e89qw4t5y6io1qa"/>
+            <column name="course_id" value="p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1"/>
+            <column name="content_id" value="ad3r1n7m8l9k0j1i2h3g4f5e6d7c8b9a"/>
+            <column name="is_completed" value="false"/>
+            <column name="create_date" value="now()"/>
+            <column name="update_date" value="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="24-07-2024-insert-questions_to_kapital_course" author="Samadov Nijat">
+        <insert tableName="questions">
+            <column name="id" value="i8o9p0a1s2q1dwv2e3r4t5y6u7d3f4g5"/>
+            <column name="quiz_section_id" value="9p0a1s2d3f4g5h2dwv2e3r4t5y6u7i8o"/>
+            <column name="text" value="What is the capital of France?"/>
+            <column name="selection_type" value="SINGLE_SELECTION"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="correct_option" value="{&quot;options&quot;:[&quot;Paris&quot;]}"/>
+            <column name="create_date" value="2024-07-11T00:00:00"/>
+            <column name="update_date" value="2024-07-11T00:00:00"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="id" value="2e3r4t5y6u7i8vo9p0a1s2d3f4g5h2q2"/>
+            <column name="quiz_section_id" value="9p0a1s2d3f4g5h2dwv2e3r4t5y6u7i8o"/>
+            <column name="text" value="What is the capital of Germany?"/>
+            <column name="selection_type" value="SINGLE_SELECTION"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="correct_option" value="{&quot;options&quot;:[&quot;Berlin&quot;]}"/>
+            <column name="create_date" value="2024-07-11T00:00:00"/>
+            <column name="update_date" value="2024-07-11T00:00:00"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="id" value="0a1s2d3f4gqdv2e3r4t5y6u7i8o9p523"/>
+            <column name="quiz_section_id" value="9p0a1s2d3f4g5h2dwv2e3r4t5y6u7i8o"/>
+            <column name="text" value="What is the capital of Italy?"/>
+            <column name="selection_type" value="SINGLE_SELECTION"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Paris&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="correct_option" value="{&quot;options&quot;:[&quot;Rome&quot;]}"/>
+            <column name="create_date" value="2024-07-11T00:00:00"/>
+            <column name="update_date" value="2024-07-11T00:00:00"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="id" value="5y6u7i8o9p0a1sr3t2v2e3r4t2d3f4g5"/>
+            <column name="quiz_section_id" value="9p0a1s2d3f4g5h2dwv2e3r4t5y6u7i8o"/>
+            <column name="text" value="What is the capital of Spain?"/>
+            <column name="selection_type" value="SINGLE_SELECTION"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Madrid&quot;,&quot;London&quot;,&quot;Berlin&quot;,&quot;Rome&quot;]}"/>
+            <column name="correct_option" value="{&quot;options&quot;:[&quot;Madrid&quot;]}"/>
+            <column name="create_date" value="2024-07-11T00:00:00"/>
+            <column name="update_date" value="2024-07-11T00:00:00"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="id" value="fe5y6u7i8o9p0a12e3err234ts2d3f4g"/>
+            <column name="quiz_section_id" value="9p0a1s2d3f4g5h2dwv2e3r4t5y6u7i8o"/>
+            <column name="text" value="Which are planet?"/>
+            <column name="selection_type" value="MULTIPLE_SELECTION"/>
+            <column name="question_option"
+                    value="{&quot;options&quot;:[&quot;Jupiter&quot;,&quot;Prometeus&quot;,&quot;Black hole&quot;,&quot;Earth&quot;]}"/>
+            <column name="correct_option" value="{&quot;options&quot;:[&quot;Jupiter&quot;,&quot;Earth&quot;]}"/>
+            <column name="create_date" value="2024-07-11T00:00:00"/>
+            <column name="update_date" value="2024-07-11T00:00:00"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

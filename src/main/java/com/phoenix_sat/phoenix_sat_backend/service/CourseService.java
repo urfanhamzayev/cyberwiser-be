@@ -27,6 +27,8 @@ public interface CourseService {
     CourseResponse confirmCourseAssignment(String courseId);
 
     void delete(String courseId);
+
+    LectureResponse completeLecture(String lectureId);
 }
 
 

@@ -3,8 +3,19 @@ package com.phoenix_sat.phoenix_sat_backend.repository;
 import com.phoenix_sat.phoenix_sat_backend.entity.Course;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, String>, JpaSpecificationExecutor<Course> {
+    @Transactional
+    @Modifying
+    @Query("update Course c set c.isVisible = true where c.id = :id")
+    void updateById(String id);
+
+    List<Course> findAllByOrganizationId(String organizationId);
 }

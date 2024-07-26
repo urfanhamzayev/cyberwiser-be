@@ -36,7 +36,17 @@ public class User extends BaseEntity {
     )
     private Set<Role> roles;
 
+    @Column(name = "picture_url")
+    private String pictureUrl;
+
     private String name;
     private String email;
     private String password;
+
+    @Column
+    private String roleId;
+
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = false;
 }

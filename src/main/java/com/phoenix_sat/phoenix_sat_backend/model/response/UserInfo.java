@@ -1,5 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.model.response;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,4 +13,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserInfo {
     private User user;
+    private Organization organization;
 }

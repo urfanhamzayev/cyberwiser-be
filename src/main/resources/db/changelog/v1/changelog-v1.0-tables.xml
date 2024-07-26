@@ -11,7 +11,13 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(50)"/>
             <column name="type" type="organization_type"/>
+            <column name="description" type="varchar(255)"/>
+            <column name="phone_number" type="varchar(50)"/>
+            <column name="num_employees" type="int"/>
+            <column name="country" type="varchar(50)"/>
+            <column name="industry" type="varchar(50)"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -36,6 +42,8 @@
             <column name="name" type="varchar(50)"/>
             <column name="email" type="varchar(50)"/>
             <column name="password" type="varchar(255)"/>
+            <column name="picture_url" type="varchar(100)"/>
+            <column name="is_active" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -154,8 +162,7 @@
             <column name="user_id" type="char(32)"/>
             <column name="course_id" type="char(32)"/>
             <column name="content_id" type="char(32)"/>
-            <column name="lectures_completed" type="INT"/>
-            <column name="quizzes_completed" type="INT"/>
+            <column name="is_completed" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -282,4 +289,11 @@
                                  referencedColumnNames="id"/>
     </changeSet>
 
+
+<!--    <changeSet id="26-07-2024-init_spring_batch_schema" author="Samadov Nijat">-->
+<!--        <sqlFile encoding="UTF-8"-->
+<!--                 path="classpath:/org/springframework/batch/core/schema-postgresql.sql"-->
+<!--                 relativeToChangelogFile="false" splitStatements="true"-->
+<!--                 endDelimiter=";" stripComments="true" />-->
+<!--    </changeSet>-->
 </databaseChangeLog>

@@ -19,6 +19,11 @@ spring:
     default-schema: ${PHOENIX_BACKEND_DB_SCHEMA:public}
     liquibase-schema: ${PHOENIX_BACKEND_DB_SCHEMA:public}
     enabled: true
+  batch:
+    job:
+      enabled: false
+  main:
+    allow-bean-definition-overriding: true
 
 
 security:
