@@ -1,6 +1,22 @@
-name: phoenix-sat-service-local-env
+version: '3.8'
 
 services:
+  app:
+    image: openjdk:17-jdk-slim
+    container_name: phoenix-sat-backend
+    working_dir: /phoenix-sat-backend
+    volumes:
+      - ./build/libs/phoenix-sat-backend-0.0.1-SNAPSHOT.jar:/app/myapp.jar
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    entrypoint: ["sh", "-c", "echo 'Waiting for PostgreSQL to start...' && sleep 10 && java -jar /app/myapp.jar"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sat_backend
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: admin
+
   postgres:
     image: postgres:latest
     environment:
@@ -8,10 +24,15 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: admin
     volumes:
-      - postgres:/data/postgres
+      - postgres:/var/lib/postgresql/data
       - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - '5442:5432'
+      - "5442:5432"
+    logging:
+      driver: json-file
+      options:
+        max-size: "200k"
+        max-file: "10"
 
 volumes:
   postgres:
