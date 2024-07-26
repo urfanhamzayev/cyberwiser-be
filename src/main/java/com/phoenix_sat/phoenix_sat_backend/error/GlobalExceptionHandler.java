@@ -1,7 +1,9 @@
 package com.phoenix_sat.phoenix_sat_backend.error;
 
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.InvalidAnswerException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.NullValueException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.PermissionDeniedException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -43,5 +45,15 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
     }
 
+    @ExceptionHandler(PermissionDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handlePermissionDeniedException(PermissionDeniedException e) {
+        return new ErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
+    }
 
+    @ExceptionHandler(InvalidAnswerException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleInvalidAnswerException(InvalidAnswerException e) {
+        return new ErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
+    }
 }

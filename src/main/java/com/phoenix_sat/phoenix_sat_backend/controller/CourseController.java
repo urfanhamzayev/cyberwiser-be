@@ -1,7 +1,5 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.Course;
-import com.phoenix_sat.phoenix_sat_backend.entity.CourseAssignment;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
@@ -9,12 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/courses")
@@ -23,9 +19,9 @@ public class CourseController {
     private final CourseService courseService;
 
     // TODO:
-       // 1) User can only see their comfirmed course
-       // 2)  Admin can see only his course, assidned by super admin course both (comfirmed/not comfirmed)
-       // 3) Super admin can see only main course
+    // 1) User can only see their confirmed course +
+    // 2)  Admin can see only his course, assigned by super admin course both (comfirmed/not comfirmed) +
+    // 3) Super admin can see only main course +
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public CourseResponse create(@RequestBody CreateCourseRequest courseRequest) {
@@ -61,8 +57,8 @@ public class CourseController {
 
     @GetMapping
     public Page<CourseResponse> getCoursePage(@ParameterObject CourseFilterRequest courseFilterRequest,
-                                                @ParameterObject Pageable pageable) {
-        return courseService.getCoursePage(courseFilterRequest,pageable);
+                                              @ParameterObject Pageable pageable) {
+        return courseService.getCoursePage(courseFilterRequest, pageable);
     }
 
 
@@ -77,4 +73,10 @@ public class CourseController {
     public void delete(@PathVariable String courseId) {
         courseService.delete(courseId);
     }
+
+    @PutMapping("/{lectureId}/complete")
+    public LectureResponse completeLecture(@PathVariable String lectureId) {
+        return courseService.completeLecture(lectureId);
+    }
+
 }

@@ -32,6 +32,7 @@ public class RequestScopedUserProvider {
 
         var user =  userRepository.findById(userId).orElseThrow(ResourceNotFoundException::new);
         return UserInfo.builder()
+                .organization(user.getOrganization())
                 .user(user)
                 .build();
     }

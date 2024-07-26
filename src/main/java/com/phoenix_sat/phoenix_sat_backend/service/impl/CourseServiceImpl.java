@@ -1,14 +1,16 @@
 package com.phoenix_sat.phoenix_sat_backend.service.impl;
 
 import com.phoenix_sat.phoenix_sat_backend.constant.AppConstants;
+import com.phoenix_sat.phoenix_sat_backend.converter.CourseContentResponseConverter;
+import com.phoenix_sat.phoenix_sat_backend.converter.QuestionResponseConverter;
 import com.phoenix_sat.phoenix_sat_backend.entity.*;
 import com.phoenix_sat.phoenix_sat_backend.entity.metadata.QuestionOptions;
 import com.phoenix_sat.phoenix_sat_backend.enums.ContentType;
+import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
 import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.InvalidAnswerException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
-import com.phoenix_sat.phoenix_sat_backend.mapper.CourseContentResponseMapper;
-import com.phoenix_sat.phoenix_sat_backend.mapper.QuestionResponseMapper;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
@@ -29,16 +31,18 @@ import java.util.Objects;
 public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final CourseContentRepository courseContentRepository;
-    private final CourseContentResponseMapper courseContentResponseMapper;
+    private final CourseContentResponseConverter courseContentResponseConverter;
     private final QuizSectionRepository quizSectionRepository;
     private final QuestionRepository questionRepository;
-    private final QuestionResponseMapper questionResponseMapper;
+    private final QuestionResponseConverter questionResponseConverter;
     private final LectureRepository lectureRepository;
     private final QuizRepository quizRepository;
     private final UserInfo userInfo;
     private final AppConstants appConstants;
     private final CourseAssignmentRepository courseAssignmentRepository;
     private final ProgressRepository progressRepository;
+    private final UserRepository userRepository;
+    private final CompletionRepository completionRepository;
 
     @Transactional
     @Override
@@ -46,26 +50,32 @@ public class CourseServiceImpl implements CourseService {
         User user = userInfo.getUser();
         Organization organization = user.getOrganization();
 
-        Course savedCourse = courseRepository.save(buildCourseByRole(courseRequest, organization));
+        Course savedCourse = courseRepository.save(Objects.requireNonNull(buildCourseByRole(courseRequest, organization)));
 
         CourseAssignment courseAssignment = buildCourseAssignmentByRole(savedCourse, organization);
 
         courseAssignmentRepository.save(courseAssignment);
 
+
         return buildCourseResponse(savedCourse);
     }
 
+    @Transactional
     @Override
     public CourseContentResponse getCourseContent(String courseId) {
         Course course = courseRepository.findById(courseId).orElseThrow(() ->
                 new ResourceNotFoundException("Course couldn't find by this id: " + courseId));
 
-        List<CourseContent> courseContentList = courseContentRepository.
-                getCourseContentsByCourseIdOrderBySequenceNumber(course.getId());
 
-        Progress progress = progressRepository.findByUserId(userInfo.getUser().getId()).orElse(null);
-        Integer progressRate = getProgressRate(progress);
-        return courseContentResponseMapper.apply(courseContentList, course.getTitle(), progressRate);
+        if (!(course.getOrganization().getType() == OrganizationType.MAIN)
+            && !course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
+            throw new AuthenticationException("You are not assigned to get content of another organization's course");
+
+
+        List<Progress> progressesOfUser = progressRepository.findAllByUserIdAndCourseIdOrderByCreateDate(userInfo.getUser().getId(),
+                course.getId());
+
+        return courseContentResponseConverter.apply(progressesOfUser, course.getTitle(), calculateRateOfProgress(progressesOfUser));
     }
 
     @Override
@@ -73,54 +83,79 @@ public class CourseServiceImpl implements CourseService {
         QuizSection quizSection = quizSectionRepository.findByQuizId(quizId).orElseThrow(() ->
                 new ResourceNotFoundException("Quiz not found with this id: " + quizId));
 
+        String organizationId = courseContentRepository.findOrganizationIdByQuizIdNative(quizId).orElseThrow(() ->
+                new ResourceNotFoundException("Quiz not found"));
+
+        if (!organizationId.equals(userInfo.getUser().getOrganization().getId()))
+            throw new AuthenticationException("You are not assigned to get content of another organization's course");
+
         List<Question> questions = questionRepository.findAllByQuizSectionId(quizSection.getId());
-        List<QuestionResponse> questionResponses = questions.stream().map(questionResponseMapper).toList();
+        List<QuestionResponse> questionResponses = questions.stream().map(questionResponseConverter).toList();
 
         return buildQuizQuestionsResponse(questionResponses);
     }
 
+    @Transactional
     @Override
     public QuizCompleteResponse completeQuiz(QuizCompleteRequest quizCompleteRequest) {
         quizRepository.findById(quizCompleteRequest.quizId()).orElseThrow(() ->
                 new ResourceNotFoundException("quiz not found with this id: " + quizCompleteRequest.quizId()));
 
-        QuizSection quizSection = quizSectionRepository.findByQuizId(quizCompleteRequest.quizId()).orElseThrow(() ->
-                new ResourceNotFoundException("QuizSection not found with this id: " + quizCompleteRequest.quizId()));
+        String organizationId = findOrganizationIdByQuizId(quizCompleteRequest.quizId());
+        validateOrganizationAccess(organizationId);
 
-        List<Question> questions = questionRepository.findAllByQuizSectionId(quizSection.getId());
-
+        List<Question> questions = findQuestionsByQuizId(quizCompleteRequest.quizId());
+        if(questions.size()!=quizCompleteRequest.userAnswers().size())
+            throw new InvalidAnswerException("The number of answers provided does not match the number of questions.");
         int incorrectCount = getIncorrectCount(quizCompleteRequest, questions);
+
+        Progress progress = findProgressByQuizIdAndUserId(quizCompleteRequest.quizId());
+        markProgressAsCompleted(progress);
+
+        if (checkAndHandleCourseCompletion(progress)) {
+            var completion = buildCompletion(progress);
+            completionRepository.save(completion);
+        }
+
         return buildQuizCompleteResponse(quizCompleteRequest, questions.size() - incorrectCount, incorrectCount);
     }
-
+    
+    @Transactional
     @Override
     public LectureResponse addLecture(CreateLectureRequest createLectureRequest) {
         Course course = courseRepository.findById(createLectureRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createLectureRequest.courseId()));
 
         if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
-            throw new AuthenticationException("You can't add lecture to another organization's course");
+            throw new AuthenticationException("You are not assigned to add lecture to another organization's course");
 
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseId(course.getId());
-        Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest));
-        courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
 
-        return LectureResponseBuilder(lecture);
+        Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest));
+
+        CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
+
+        setProgressForUsers(course, courseContent);
+        
+        
+
+        return lectureResponseBuilder(lecture, false);
     }
 
+    @Transactional
     @Override
     public QuizResponse addQuiz(CreateQuizRequest createQuizRequest) {
         Course course = courseRepository.findById(createQuizRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createQuizRequest.courseId()));
 
         if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
-            throw new AuthenticationException("You can't add quiz to another organization's course");
+            throw new AuthenticationException("You are not assigned to add quiz to another organization's course");
 
         Quiz quiz = quizRepository.save(buildQuiz(createQuizRequest));
 
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseId(course.getId());
 
-        courseContentRepository.save(buildCourseContent(course, quiz, lastSequence));
+        CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, quiz, lastSequence));
 
         QuizSection quizSection = quizSectionRepository.save(buildQuizSection(createQuizRequest, quiz));
         for (int i = 0; i < createQuizRequest.questionRequestList().size(); i++) {
@@ -128,8 +163,12 @@ public class CourseServiceImpl implements CourseService {
             Question question = buildQuestion(createQuizRequest, i, quizSection);
             questionRepository.save(question);
         }
+
+        setProgressForUsers(course, courseContent);
+
         return buildQuizResponse(createQuizRequest, quiz);
     }
+
 
     @Override
     public Page<CourseResponse> getCoursePage(CourseFilterRequest courseFilterRequest, Pageable pageable) {
@@ -148,10 +187,15 @@ public class CourseServiceImpl implements CourseService {
         var courseAssignment = courseAssignmentRepository.findByCourseId(courseId).orElseThrow(() ->
                 new ResourceNotFoundException("CourseAssignment not found with this courseId: " + courseId));
 
-        courseAssignment.setConfirmed(true);
-        courseAssignmentRepository.save(courseAssignment);
+        if (!courseAssignment.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId()))
+            throw new AuthenticationException("You are not allowed to take this action");
 
-        return buildCourseResponse(courseAssignment.getCourse());
+        courseRepository.updateById(courseId);
+
+        courseAssignment.setConfirmed(true);
+        var savedAssignment = courseAssignmentRepository.save(courseAssignment);
+
+        return buildCourseResponse(savedAssignment.getCourse());
     }
 
     @Override
@@ -161,20 +205,115 @@ public class CourseServiceImpl implements CourseService {
                 new ResourceNotFoundException("Course not found with this id: " + courseId));
 
         if (!userInfo.getUser().getOrganization().getId().equals(course.getOrganization().getId()))
-            throw new AuthenticationException("You can't delete another organization's course.");
+            throw new AuthenticationException("You are not allowed to delete another organization's course.");
 
         course.setIsVisible(false);
         courseRepository.save(course);
     }
 
-    private Integer getProgressRate(Progress progress) {
-        if (progress == null)
-            return 0;
+    @Override
+    public LectureResponse completeLecture(String lectureId) {
+        Progress progress = findProgressByLectureIdAndUserId(lectureId);
+        validateOrganizationAccess(progress.getCourse().getOrganization().getId());
 
-        int completedParts = progress.getLecturesCompleted() + progress.getQuizzesCompleted();
-        Integer allParts = courseContentRepository.findLastSequenceNumberByCourseId(progress.getCourse().getId());
+        markProgressAsCompleted(progress);
 
-        return (completedParts * 100) / allParts;
+        if (checkAndHandleCourseCompletion(progress)) {
+            var completion = buildCompletion(progress);
+            completionRepository.save(completion);
+        }
+
+        return lectureResponseBuilder(progress.getContent().getLecture(), true);
+    }
+
+    private Integer calculateRateOfProgress(List<Progress> progresses) {
+        int completedCount = 0;
+        int totalContentCount = 0;
+        for (var progress : progresses) {
+            if (progress.getIsCompleted()) {
+                completedCount++;
+                totalContentCount++;
+                continue;
+            }
+            totalContentCount++;
+        }
+
+        return totalContentCount == 0 ? 0 : (completedCount * 100) / totalContentCount;
+    }
+    private Progress findProgressByLectureIdAndUserId(String lectureId) {
+        return progressRepository.findByLectureIdAndUserId(lectureId, userInfo.getUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Lecture not found with this id: " + lectureId));
+    }
+
+    private Progress findProgressByQuizIdAndUserId(String quizId) {
+        return progressRepository.findByQuizIdAndUserId(quizId, userInfo.getUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Progress not found with this quizId: " + quizId));
+    }
+
+    private void validateOrganizationAccess(String contentOrganizationId) {
+        if (!userInfo.getUser().getOrganization().getId().equals(contentOrganizationId)) {
+            throw new AuthenticationException("You are not assigned to complete another organization's content.");
+        }
+    }
+
+    private void markProgressAsCompleted(Progress progress) {
+        progress.setIsCompleted(true);
+        progressRepository.save(progress);
+    }
+
+    private boolean checkAndHandleCourseCompletion(Progress progress) {
+        List<Boolean> isCompletedList = progressRepository.findIsCompletedByCourseIdAndUserId(
+                progress.getCourse().getId(), userInfo.getUser().getId());
+        return checkIsCompletedAllContents(isCompletedList);
+    }
+
+    private String findOrganizationIdByQuizId(String quizId) {
+        return courseContentRepository.findOrganizationIdByQuizIdNative(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+    }
+
+    private List<Question> findQuestionsByQuizId(String quizId) {
+        QuizSection quizSection = quizSectionRepository.findByQuizId(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("QuizSection not found with this id: " + quizId));
+        return questionRepository.findAllByQuizSectionId(quizSection.getId());
+    }
+
+    private Completion buildCompletion(Progress progress) {
+        return Completion.builder()
+                .user(userInfo.getUser())
+                .course(progress.getCourse())
+                .completionDate(new Date())
+                .build();
+    }
+
+    private static Progress buildProgressWhenContentCreated(User user, Course course, CourseContent courseContent) {
+        return Progress.builder()
+                .user(user)
+                .course(course)
+                .content(courseContent)
+                .isCompleted(false)
+                .build();
+    }
+
+    private boolean checkIsCompletedAllContents(List<Boolean> isCompletedList) {
+        for (boolean b : isCompletedList) {
+            if (!b)
+                return false;
+        }
+        return true;
+    }
+
+    private void setProgressForUsers(Course course, CourseContent courseContent) {
+        List<User> users;
+
+        if (isSuperAdmin())
+            users = userRepository.findAll();
+        else
+            users = userRepository.findUsersByOrganizationIdAndIsActiveTrue(userInfo.getUser().getOrganization().getId());
+
+        List<Progress> progresses = users.stream().map(user -> buildProgressWhenContentCreated(user, course, courseContent)).toList();
+
+        progressRepository.saveAll(progresses);
     }
 
     private static int getIncorrectCount(QuizCompleteRequest quizCompleteRequest, List<Question> questions) {
@@ -252,11 +391,11 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    private static LectureResponse LectureResponseBuilder(Lecture lecture) {
+    private static LectureResponse lectureResponseBuilder(Lecture lecture, Boolean isCompleted) {
         return LectureResponse.builder()
                 .lectureId(lecture.getId())
                 .contentType(ContentType.LECTURE)
-                .isCompleted(false)
+                .isCompleted(isCompleted)
                 .videoUrl(lecture.getVideoUrl())
                 .title(lecture.getTitle())
                 .build();

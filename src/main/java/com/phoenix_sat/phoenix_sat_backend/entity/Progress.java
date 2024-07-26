@@ -14,7 +14,7 @@ import jakarta.persistence.*;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class Progress extends BaseEntity{
+public class Progress extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)
@@ -32,10 +32,7 @@ public class Progress extends BaseEntity{
     @JoinColumn(name = "content_id")
     private CourseContent content;
 
-    @Column(name = "lectures_completed")
-    private int lecturesCompleted;
-
-    @Column(name = "quizzesCompleted")
-    private int quizzesCompleted;
+    @Column(name = "is_completed")
+    @Builder.Default
+    private Boolean isCompleted = false;
 }
-

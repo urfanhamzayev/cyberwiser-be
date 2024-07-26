@@ -13,12 +13,18 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view:
-    show-sql: true
+    show-sql: false
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
     default-schema: ${PHOENIX_BACKEND_DB_SCHEMA:public}
     liquibase-schema: ${PHOENIX_BACKEND_DB_SCHEMA:public}
     enabled: true
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
 
 
 security:

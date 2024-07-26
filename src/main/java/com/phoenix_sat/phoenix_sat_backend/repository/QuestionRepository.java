@@ -1,7 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.repository;
 
 import com.phoenix_sat.phoenix_sat_backend.entity.Question;
-import com.phoenix_sat.phoenix_sat_backend.repository.projection.CorrectOptionProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

@@ -29,6 +29,9 @@ public class User extends BaseEntity {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
+    @Column(name = "organization_id", insertable = false, updatable = false)
+    private String organizationId;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns ={@JoinColumn(name = "user_id", referencedColumnName = "id")},
@@ -36,7 +39,15 @@ public class User extends BaseEntity {
     )
     private Set<Role> roles;
 
+    @Column(name = "picture_url")
+    private String pictureUrl;
+
     private String name;
     private String email;
     private String password;
+
+
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = false;
 }

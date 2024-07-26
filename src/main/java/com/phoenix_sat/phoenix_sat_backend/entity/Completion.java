@@ -30,7 +30,6 @@ public class Completion {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    @Temporal(TemporalType.DATE)
     @Column(name = "completion_date")
     private Date completionDate;
 }
