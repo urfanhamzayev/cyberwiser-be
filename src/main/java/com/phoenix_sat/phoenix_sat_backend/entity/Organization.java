@@ -43,11 +43,4 @@ public class Organization extends BaseEntity {
 
     private String industry;
 
-    // TODO: Need to add
-    // , description; +
-    // , phoneNumber; +
-    //, numEmployees; +
-    // country +
-    // email +
-    // industry +
 }
