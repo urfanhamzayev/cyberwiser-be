@@ -46,6 +46,8 @@ public class User extends BaseEntity {
     private String email;
     private String password;
 
+    // Todo firstName, lastName should be added . remove name part.
+
 
     @Column(name = "is_active")
     @Builder.Default

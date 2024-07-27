@@ -11,7 +11,7 @@ import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
 @RequiredArgsConstructor
-
+// TODO: add slf4j using
 public class UserItemWriter implements ItemWriter<User> {
     private final Logger logger = LoggerFactory.getLogger(UserItemWriter.class);
     private final UserRepository userRepository;

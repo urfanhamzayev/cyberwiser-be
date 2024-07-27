@@ -20,14 +20,22 @@ import java.util.logging.Logger;
 public class UserController {
     private final UserService userService;
 
+    // TODO:
+    //5)  Add one user for creation
+
     @GetMapping("/profile")
     public UserProfileResponse getUserProfile() {
         return userService.getUserProfile();
     }
 
-    @GetMapping("/progress")
+    @GetMapping("/progress") // TODO:  statistics
     public UserProgressReport getUserProgress() {
         return userService.getUserProgress();
     }
 
 }
+
+// localhost:8080/{orgId}/{userId}
+
+// localhost:8080/{orgId} -> azercell.phoenixmild.com/{userId}/{token} 1 week expire
+                             // passs/comfirm

@@ -43,4 +43,6 @@ public class Organization extends BaseEntity {
 
     private String industry;
 
+    // TOOD: add domain
+
 }

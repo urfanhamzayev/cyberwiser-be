@@ -22,6 +22,7 @@ public class CourseController {
     // 1) User can only see their confirmed course +
     // 2)  Admin can see only his course, assigned by super admin course both (comfirmed/not comfirmed) +
     // 3) Super admin can see only main course +
+    // 4) Admin can create a course /edit a course/delete a course
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public CourseResponse create(@RequestBody CreateCourseRequest courseRequest) {

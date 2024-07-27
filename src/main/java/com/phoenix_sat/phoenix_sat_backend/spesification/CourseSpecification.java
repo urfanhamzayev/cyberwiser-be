@@ -20,7 +20,8 @@ public class CourseSpecification implements Specification<Course> {
     private CourseFilterRequest filter;
     private String defaultOrganizationId;
 
-
+/// TODO: Admin level -> fetch all the course based on assigned
+     // User Level -> fetch all the course based on assigned and comfirmed true flag
     @Override
     public Predicate toPredicate(Root<Course> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> predicates = new ArrayList<>();

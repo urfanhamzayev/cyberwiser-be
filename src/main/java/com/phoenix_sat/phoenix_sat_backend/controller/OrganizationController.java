@@ -22,6 +22,10 @@ public class OrganizationController {
     private final OrganizationService organizationService;
     private final UserService userService;
 
+    // TODO:
+       //  1) :  Update Organization
+       //  2) : Deactivate organization
+      //  User can not login if it is deacitvate or organization level deactivated
     @PostMapping
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public OrganizationResponse create(@RequestBody @Valid CreateOrganizationRequest createOrganizationRequest) {
@@ -41,9 +45,14 @@ public class OrganizationController {
         return HttpStatus.OK;
     }
 
-    @GetMapping("/users-progress")
+    @GetMapping("/users-progress") // TODO :  users-statistics
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<UserProgressReport> getAllUserProgress() {
         return userService.getAllUserProgress();
     }
 }
+
+
+ // ##### PHOENIXMILD ### -> SuperAdmin (MAIN)
+ // KapitalBank -> Admin  (SUB)
+ // KapitalBank User -> user
