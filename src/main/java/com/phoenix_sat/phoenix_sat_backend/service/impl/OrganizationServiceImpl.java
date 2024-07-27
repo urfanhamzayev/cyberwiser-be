@@ -12,14 +12,14 @@ import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import com.phoenix_sat.phoenix_sat_backend.service.FileService;
 import com.phoenix_sat.phoenix_sat_backend.service.OrganizationService;
 import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +28,7 @@ import java.util.UUID;
 
 @Service
 public class OrganizationServiceImpl implements OrganizationService {
+    private final Logger logger = LoggerFactory.getLogger(OrganizationServiceImpl.class);
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final UserInfo userInfo;
@@ -42,7 +43,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                                    UserRepository userRepository,
                                    UserInfo userInfo, FileService fileService,
                                    JobLauncher jobLauncher,
-                                   @Qualifier(value = "importUsersJob")  Job userCsvImportJob) {
+                                   @Qualifier(value = "importUsersJob") Job userCsvImportJob) {
 
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
@@ -73,23 +74,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @SneakyThrows
     @Override
     public void importUsersFromFile(MultipartFile file) {
-//        try {
-//            String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-//            fileService.saveFile(file.getBytes(), fileName);
-//
-//            JobParameters jobParameters = new JobParametersBuilder()
-//                    .addString("filename", Objects.requireNonNull(fileName))
-//                    .addLong("time", System.currentTimeMillis())
-//                    .toJobParameters();
-//
-//
-//            jobLauncher.run(importUserJob, jobParameters);
-//            return "File uploaded and processing started!";
-//        } catch (Exception e) {
-//            // Log the full stack trace
-//            e.printStackTrace();
-//            return "Failed to process file.";
-//        }
+        logger.info("User importing from csv file is starting... UserId: {} , OrgId: {}",userInfo.getUser().getId(),userInfo.getOrganization().getId());
         String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
         fileService.saveFile(file.getBytes(), fileName);
         JobParameters jobParameters = new JobParametersBuilder()

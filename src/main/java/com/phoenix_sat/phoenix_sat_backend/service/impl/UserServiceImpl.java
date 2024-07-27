@@ -14,6 +14,8 @@ import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import com.phoenix_sat.phoenix_sat_backend.security.JWTProvider;
 import com.phoenix_sat.phoenix_sat_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTProvider jwtProvider;
@@ -35,14 +38,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public JwtToken logIn(UserLoginRequest userLoginRequest) {
-        // TODO:
-        // Need to check user is active +
+        logger.info("User login process starting...");
         User user = userRepository.findByEmailAndIsActiveTrue(userLoginRequest.email()).orElseThrow(() ->
                 new ResourceNotFoundException("User not found with this email: " + userLoginRequest.email()));
         boolean isMatch = passwordEncoder.matches(userLoginRequest.password(), user.getPassword());
-        if (isMatch)
+        if (isMatch) {
+            logger.info("User logged successfully. UserId: {}",user.getId());
             return buildJwtToken(user);
-
+        }
         throw new AuthenticationException("Bad credentials");
     }
 
