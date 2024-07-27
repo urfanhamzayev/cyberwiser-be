@@ -25,7 +25,7 @@ public class UserItemProcessor implements ItemProcessor<UserRequest, User> {
 
     @Override
     public User process(UserRequest userRow) throws Exception {
-        System.out.println("User's organization id is " + userRow.organizationId());
+//        System.out.println("User's organization id is " + userRow.organizationId());
         return User.builder()
                 .email(userRow.email())
                 .roles(defaultRoles.stream()
