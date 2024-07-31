@@ -33,7 +33,8 @@ public class UserItemProcessor implements ItemProcessor<UserRequest, User> {
                         .collect(Collectors.toSet())
                 )
                 .organizationId(userRow.organizationId())
-                .name(userRow.name())
+                .firstName(userRow.firstName())
+                .lastName(userRow.lastName())
                 .build();
     }
 

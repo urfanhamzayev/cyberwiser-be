@@ -1,10 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.error;
 
-import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.InvalidAnswerException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.NullValueException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.PermissionDeniedException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -55,5 +51,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleInvalidAnswerException(InvalidAnswerException e) {
         return new ErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleResourceAlreadyExistException(ResourceAlreadyExistException e) {
+        return new ErrorResponse(HttpStatus.CONFLICT,e.getMessage());
     }
 }

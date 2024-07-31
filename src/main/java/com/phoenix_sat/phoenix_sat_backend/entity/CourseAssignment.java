@@ -3,6 +3,7 @@ import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.Date;
 
@@ -15,6 +16,7 @@ import java.util.Date;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class CourseAssignment extends BaseEntity{
     @Id
     @GeneratedValue(generator = "idGenerator")

@@ -5,15 +5,15 @@ import com.phoenix_sat.phoenix_sat_backend.entity.User;
 import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
 @RequiredArgsConstructor
-// TODO: add slf4j using
+@Slf4j
 public class UserItemWriter implements ItemWriter<User> {
-    private final Logger logger = LoggerFactory.getLogger(UserItemWriter.class);
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
 
@@ -28,7 +28,7 @@ public class UserItemWriter implements ItemWriter<User> {
 
         items.forEach(item -> item.setOrganization(organization));
         userRepository.saveAll(items);
-        logger.info("All user from csv file is saved to the database.");
-        logger.info("Job's ended successfully");
+        log.info("All user from csv file is saved to the database.");
+        log.info("Job's ended successfully");
     }
 }

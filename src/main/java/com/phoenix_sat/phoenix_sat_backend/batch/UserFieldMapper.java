@@ -19,9 +19,13 @@ public class UserFieldMapper implements FieldSetMapper<UserRequest> {
 
     @Override
     public UserRequest mapFieldSet(FieldSet fieldSet) throws BindException {
+        String[] fullName = fieldSet.readString("fullName").split(" ");
+        String firstName = fullName[0];
+        String lastName =fullName[1];
         return UserRequest.builder()
                 .organizationId(organizationId)
-                .name(fieldSet.readString("name"))
+                .firstName(firstName)
+                .lastName(lastName)
                 .email(fieldSet.readString("email"))
                 .roleType(getRole(fieldSet.readString("role")))
                 .build();

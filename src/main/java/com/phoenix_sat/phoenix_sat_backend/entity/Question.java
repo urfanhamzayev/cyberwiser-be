@@ -8,6 +8,7 @@ import com.phoenix_sat.phoenix_sat_backend.enums.SelectionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -19,6 +20,7 @@ import org.hibernate.annotations.Type;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Question extends BaseEntity{
     @Id
     @GeneratedValue(generator = "idGenerator")

@@ -5,6 +5,7 @@ import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "quiz_sections")
@@ -15,6 +16,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class QuizSection extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")

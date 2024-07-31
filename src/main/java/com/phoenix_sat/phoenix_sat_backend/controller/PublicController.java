@@ -2,12 +2,11 @@ package com.phoenix_sat.phoenix_sat_backend.controller;
 
 import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
+import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
+import com.phoenix_sat.phoenix_sat_backend.model.response.UserRegisterResponse;
 import com.phoenix_sat.phoenix_sat_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -21,4 +20,12 @@ public class PublicController {
     public JwtToken logIn(@RequestBody @Valid UserLoginRequest userLoginRequest) {
         return userService.logIn(userLoginRequest);
     }
+
+    @PostMapping("/{organizationId}/register")
+    public UserRegisterResponse register(@PathVariable String organizationId,
+                                         @RequestBody
+                                         @Valid UserRegisterRequest userRegisterRequest) {
+        return userService.register(organizationId, userRegisterRequest);
+    }
+
 }

@@ -6,6 +6,7 @@ import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -17,6 +18,7 @@ import org.hibernate.annotations.Type;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Organization extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
@@ -43,6 +45,6 @@ public class Organization extends BaseEntity {
 
     private String industry;
 
-    // TOOD: add domain
+    private String domain;
 
 }

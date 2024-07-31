@@ -39,11 +39,13 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="organization_id" type="char(32)"/>
-            <column name="name" type="varchar(50)"/>
+            <column name="first_name" type="varchar(50)"/>
+            <column name="last_name" type="varchar(50)"/>
             <column name="email" type="varchar(50)"/>
             <column name="password" type="varchar(255)"/>
             <column name="picture_url" type="varchar(100)"/>
             <column name="is_active" type="boolean"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -64,7 +66,6 @@
             </column>
         </createTable>
     </changeSet>
-
 
 
     <!-- Create Course table -->
@@ -103,6 +104,7 @@
             <column name="title" type="VARCHAR(255)"/>
             <column name="video_url" type="VARCHAR(255)"/>
             <column name="duration" type="VARCHAR(50)"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -116,6 +118,7 @@
             </column>
             <column name="title" type="VARCHAR(255)"/>
             <column name="number_of_questions" type="INT"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -132,6 +135,7 @@
             <column name="quiz_id" type="char(32)"/>
             <column name="type" type="content_type"/>
             <column name="sequence_number" type="int"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
 
@@ -163,6 +167,7 @@
             <column name="course_id" type="char(32)"/>
             <column name="content_id" type="char(32)"/>
             <column name="is_completed" type="boolean"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -192,6 +197,7 @@
             <column name="user_id" type="char(32)"/>
             <column name="course_id" type="char(32)"/>
             <column name="completion_date" type="DATE"/>
+            <column name="is_deleted" type="boolean"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="completions"
                                  baseColumnNames="user_id"
@@ -216,6 +222,7 @@
             <column name="organization_id" type="char(32)"/>
             <column name="assigned_date" type="timestamp without timezone"/>
             <column name="confirmed" type="BOOLEAN"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -238,6 +245,7 @@
             </column>
             <column name="quiz_id" type="char(32)"/>
             <column name="title" type="varchar(50)"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -259,6 +267,7 @@
             <column name="selection_type" type="selection_type"/>
             <column name="question_option" type="text"/>
             <column name="correct_option" type="text"/>
+            <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
@@ -281,6 +290,9 @@
             <column name="published_date" type="timestamp without timezone"/>
             <column name="available_points" type="int"/>
             <column name="categories" type="text"/>
+            <column name="is_deleted" type="boolean"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="course_details"
                                  baseColumnNames="course_id"
@@ -289,11 +301,16 @@
                                  referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet id="28-07-2024-add_domain_column_to_organizations_table" author="Samadov Nijat">
+        <addColumn tableName="organizations">
+            <column name="domain" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
 
-<!--    <changeSet id="26-07-2024-init_spring_batch_schema" author="Samadov Nijat">-->
-<!--        <sqlFile encoding="UTF-8"-->
-<!--                 path="classpath:/org/springframework/batch/core/schema-postgresql.sql"-->
-<!--                 relativeToChangelogFile="false" splitStatements="true"-->
-<!--                 endDelimiter=";" stripComments="true" />-->
-<!--    </changeSet>-->
+    <changeSet id="28-07-2024-add_is_deleted_column_to_organizations_table" author="Samadov Nijat">
+        <addColumn tableName="organizations">
+            <column name="is_deleted" type="boolean"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
