@@ -15,6 +15,4 @@ public class InProgressCourses {
     private String courseTitle;
     private String coursePictureUrl;
     private String courseTags;
-    private Integer progressPercentage;
-
 }

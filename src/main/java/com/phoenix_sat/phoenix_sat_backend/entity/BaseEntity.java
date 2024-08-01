@@ -22,9 +22,13 @@ public class BaseEntity {
     @Column(name = "update_date")
     private Date updateDate;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
     @PrePersist
     public void initializeDate() {
         this.createDate = new Date();
         this.updateDate = new Date();
+        this.isDeleted = false;
     }
 }

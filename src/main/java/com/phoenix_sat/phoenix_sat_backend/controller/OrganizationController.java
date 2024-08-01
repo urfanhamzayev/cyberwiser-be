@@ -1,6 +1,9 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
-import com.phoenix_sat.phoenix_sat_backend.model.request.CreateOrganizationRequest;
+import com.phoenix_sat.phoenix_sat_backend.mark.Create;
+import com.phoenix_sat.phoenix_sat_backend.mark.Update;
+import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationRequest;
+import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationUpdateRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.OrganizationResponse;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserProgressReport;
 import com.phoenix_sat.phoenix_sat_backend.service.OrganizationService;
@@ -9,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,14 +26,24 @@ public class OrganizationController {
     private final OrganizationService organizationService;
     private final UserService userService;
 
-    // TODO:
-       //  1) :  Update Organization
-       //  2) : Deactivate organization
-      //  User can not login if it is deacitvate or organization level deactivated
+
     @PostMapping
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
-    public OrganizationResponse create(@RequestBody @Valid CreateOrganizationRequest createOrganizationRequest) {
-        return organizationService.create(createOrganizationRequest);
+    public OrganizationResponse create(@RequestBody @Valid OrganizationRequest organizationRequest) {
+        return organizationService.create(organizationRequest);
+    }
+
+    @PutMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
+    public OrganizationResponse update(@RequestBody OrganizationUpdateRequest organizationRequest) {
+        return organizationService.update(organizationRequest);
+    }
+
+    @DeleteMapping("{organizationId}")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    public HttpStatus deactivateOrganization(@PathVariable String organizationId) {
+        organizationService.deactivateOrganization(organizationId);
+        return HttpStatus.OK;
     }
 
     @DeleteMapping("/{userId}/user")
@@ -40,19 +54,21 @@ public class OrganizationController {
     }
 
     @PostMapping(value = "/import", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public HttpStatus importUsers(@RequestPart MultipartFile file) {
         organizationService.importUsersFromFile(file);
         return HttpStatus.OK;
     }
 
-    @GetMapping("/users-progress") // TODO :  users-statistics
+    @GetMapping("/users-statistics")
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<UserProgressReport> getAllUserProgress() {
         return userService.getAllUserProgress();
     }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    public List<OrganizationResponse> getAllOrganization() {
+        return organizationService.getAllOrganization();
+    }
 }
-
-
- // ##### PHOENIXMILD ### -> SuperAdmin (MAIN)
- // KapitalBank -> Admin  (SUB)
- // KapitalBank User -> user

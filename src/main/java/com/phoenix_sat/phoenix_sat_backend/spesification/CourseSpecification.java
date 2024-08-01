@@ -1,6 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.spesification;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.Course;
+import com.phoenix_sat.phoenix_sat_backend.entity.CourseAssignment;
 import com.phoenix_sat.phoenix_sat_backend.model.request.CourseFilterRequest;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -15,26 +15,20 @@ import java.util.List;
 
 
 @AllArgsConstructor
-public class CourseSpecification implements Specification<Course> {
-    private Boolean isSuperAdmin;
+public class CourseSpecification implements Specification<CourseAssignment> {
+    private Boolean isSuperAdminOrAdmin;
     private CourseFilterRequest filter;
     private String defaultOrganizationId;
 
-/// TODO: Admin level -> fetch all the course based on assigned
-     // User Level -> fetch all the course based on assigned and comfirmed true flag
+
     @Override
-    public Predicate toPredicate(Root<Course> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public Predicate toPredicate(Root<CourseAssignment> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> predicates = new ArrayList<>();
-        if (!isSuperAdmin)
-            predicates.add(cb.equal(root.get("isVisible"), true));
+        if (!isSuperAdminOrAdmin)
+            predicates.add(cb.equal(root.get("confirmed"), true));
 
         if (filter.getOrganizationId() != null) {
-            Predicate orgIdPredicate = cb.equal(root.get("organization").get("id"), filter.getOrganizationId());
-            Predicate defaultOrgIdPredicate = cb.equal(root.get("organization").get("id"), defaultOrganizationId);
-            predicates.add(cb.or(orgIdPredicate, defaultOrgIdPredicate));
-        } else {
-            // If no organizationId is provided in the filter, still include default organization ID courses
-            predicates.add(cb.equal(root.get("organization").get("id"), defaultOrganizationId));
+            predicates.add(cb.equal(root.get("organization").get("id"),filter.getOrganizationId()));
         }
 
         if (StringUtils.isNotEmpty(filter.getName())) {
@@ -50,8 +44,7 @@ public class CourseSpecification implements Specification<Course> {
             predicates.add(cb.like(cb.lower(root.get("instructor")), "%" + filter.getInstructor().toLowerCase() + "%"));
         }
 
-        return cb.and(predicates.toArray(new Predicate[0]));
-    }
+        return cb.and(predicates.toArray(new Predicate[0]));    }
 
     private String prepareSearchText(String searchText) {
         return "%" + searchText.toLowerCase() + "%";

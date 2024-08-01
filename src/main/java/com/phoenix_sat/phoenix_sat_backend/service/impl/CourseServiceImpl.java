@@ -10,6 +10,7 @@ import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
 import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.InvalidAnswerException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.PermissionDeniedException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
@@ -17,9 +18,9 @@ import com.phoenix_sat.phoenix_sat_backend.repository.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
 import com.phoenix_sat.phoenix_sat_backend.spesification.CourseSpecification;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,8 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CourseServiceImpl implements CourseService {
-    private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 
     private final CourseRepository courseRepository;
     private final CourseContentRepository courseContentRepository;
@@ -47,20 +48,24 @@ public class CourseServiceImpl implements CourseService {
     private final ProgressRepository progressRepository;
     private final UserRepository userRepository;
     private final CompletionRepository completionRepository;
+    private final OrganizationRepository organizationRepository;
 
     @Transactional
     @Override
     public CourseResponse create(CreateCourseRequest courseRequest) {
-        logger.info("Creating a new course with name: {}", courseRequest.name());
+        log.info("Creating a new course with name: {}", courseRequest.name());
+
         User user = userInfo.getUser();
         Organization organization = user.getOrganization();
 
-        Course savedCourse = courseRepository.save(Objects.requireNonNull(buildCourseByRole(courseRequest, organization)));
-        logger.info("Course saved with ID: {}", savedCourse.getId());
+        Course savedCourse = courseRepository.save(getCourse(courseRequest, organization, false));
 
-        CourseAssignment courseAssignment = buildCourseAssignmentByRole(savedCourse, organization);
+        log.info("Course saved with ID: {}", savedCourse.getId());
+
+        CourseAssignment courseAssignment = buildCourseAssignment(savedCourse, organization, false);
+
         courseAssignmentRepository.save(courseAssignment);
-        logger.info("Course assignment saved for course ID: {}", savedCourse.getId());
+        log.info("Course assignment saved for course ID: {}", savedCourse.getId());
 
         return buildCourseResponse(savedCourse);
     }
@@ -68,32 +73,51 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @Override
     public CourseContentResponse getCourseContent(String courseId) {
-        logger.info("Fetching course content for course ID: {}", courseId);
+        log.info("Fetching course content for course ID: {}", courseId);
         Course course = courseRepository.findById(courseId).orElseThrow(() ->
                 new ResourceNotFoundException("Course couldn't find by this id: " + courseId));
 
         if (!(course.getOrganization().getType() == OrganizationType.MAIN)
             && !course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}",userInfo.getUser().getId());
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
             throw new AuthenticationException("You are not assigned to get content of another organization's course");
         }
-        List<Progress> progressesOfUser = progressRepository.findAllByUserIdAndCourseIdOrderByCreateDate(userInfo.getUser().getId(),
-                course.getId());
 
-        return courseContentResponseConverter.apply(progressesOfUser, course.getTitle(), calculateRateOfProgress(progressesOfUser));
+        List<CourseContent> contents = courseContentRepository
+                .getCourseContentsByCourseIdAndIsDeletedFalseOrderBySequenceNumber(course.getId());
+
+        List<Progress> progressesOfUser = progressRepository
+                .findAllByUserIdAndCourseIdOrderByIsCompletedDescCreateDateAsc(userInfo.getUser().getId(),
+                        course.getId());
+
+        for (CourseContent content : contents) {
+            boolean isExistProgress = progressesOfUser.stream()
+                    .anyMatch(progress -> progress.getContent().getId().equals(content.getId()));
+
+            if (!isExistProgress) {
+                Progress progress = buildProgress(userInfo.getUser(), course, content);
+                progressRepository.save(progress);
+            }
+        }
+
+        List<Progress> updatedProgress = progressRepository
+                .findAllByUserIdAndCourseIdOrderByIsCompletedDescCreateDateAsc(userInfo.getUser().getId(), course.getId());
+
+
+        return courseContentResponseConverter.apply(updatedProgress, course.getTitle(), calculateRateOfProgress(progressesOfUser));
     }
 
     @Override
     public QuizQuestionsResponse getQuizQuestions(String quizId) {
-        logger.info("Fetching quiz questions for quiz ID: {}", quizId);
+        log.info("Fetching quiz questions for quiz ID: {}", quizId);
         QuizSection quizSection = quizSectionRepository.findByQuizId(quizId).orElseThrow(() ->
                 new ResourceNotFoundException("Quiz not found with this id: " + quizId));
 
-        String organizationId = courseContentRepository.findOrganizationIdByQuizIdNative(quizId).orElseThrow(() ->
+        String organizationId = courseContentRepository.findOrganizationIdByQuizIdNativeIsDeletedFalse(quizId).orElseThrow(() ->
                 new ResourceNotFoundException("Quiz not found"));
 
         if (!organizationId.equals(userInfo.getUser().getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
             throw new AuthenticationException("You are not assigned to get content of another organization's course");
         }
 
@@ -106,11 +130,24 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @Override
     public QuizCompleteResponse completeQuiz(QuizCompleteRequest quizCompleteRequest) {
-        logger.info("Completing quiz with ID: {}", quizCompleteRequest.quizId());
+        log.info("Completing quiz with ID: {}", quizCompleteRequest.quizId());
 
-        String organizationId = findOrganizationIdByQuizId(quizCompleteRequest.quizId());
-        if (!organizationId.equals(appConstants.getDefaultId()))
-            validateOrganizationAccess(organizationId);
+        CourseContent courseContent = courseContentRepository.findByQuizId(quizCompleteRequest.quizId())
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+
+        CourseContent lastCompletedCourseContent = progressRepository
+                .getLastCompletedContentByUserId(userInfo.getUser().getId()).orElse(null);
+
+        log.info("Checking quiz's order with the sequence number, QuizId:" + quizCompleteRequest.quizId());
+
+        if (lastCompletedCourseContent != null &&
+            !lastCompletedCourseContent.getSequenceNumber().equals(courseContent.getSequenceNumber() - 1))
+            throw new PermissionDeniedException("Users have to complete parts in order!");
+
+        courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(courseContent.getCourse().getId()
+                , userInfo.getOrganization().getId()).orElseThrow(()
+                -> new ResourceNotFoundException("Course Assignment not found"));
+
 
         quizRepository.findById(quizCompleteRequest.quizId()).orElseThrow(() ->
                 new ResourceNotFoundException("Quiz not found with this id: " + quizCompleteRequest.quizId()));
@@ -128,7 +165,7 @@ public class CourseServiceImpl implements CourseService {
             completionRepository.save(completion);
         }
 
-        logger.info("User: {} - completed quiz successfully with ID: {}", userInfo.getUser().getId(), quizCompleteRequest.quizId());
+        log.info("User: {} - completed quiz successfully with ID: {}", userInfo.getUser().getId(), quizCompleteRequest.quizId());
 
         return buildQuizCompleteResponse(quizCompleteRequest, questions.size() - incorrectCount, incorrectCount);
     }
@@ -136,20 +173,22 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @Override
     public LectureResponse addLecture(CreateLectureRequest createLectureRequest) {
-        logger.info("Adding lecture to course ID: {}", createLectureRequest.courseId());
+        log.info("Adding lecture to course ID: {}", createLectureRequest.courseId());
         Course course = courseRepository.findById(createLectureRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createLectureRequest.courseId()));
+        CourseAssignment courseAssignment = courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId()
+                        , userInfo.getOrganization().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
-        if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+        if (!courseAssignment.getOrganization().getId().equals(userInfo.getOrganization().getId())) {
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
             throw new AuthenticationException("You are not assigned to add lecture to another organization's course");
         }
 
-        Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseId(course.getId());
+        Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseIdIsDeletedFalse(course.getId());
         Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest));
         CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
-        setProgressForUsers(course, courseContent);
-        logger.info("Lecture added successfully to course ID: {}", createLectureRequest.courseId());
+        log.info("Lecture added successfully to course ID: {}", createLectureRequest.courseId());
 
         return lectureResponseBuilder(lecture, false);
     }
@@ -157,17 +196,21 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @Override
     public QuizResponse addQuiz(CreateQuizRequest createQuizRequest) {
-        logger.info("Adding quiz to course ID: {}", createQuizRequest.courseId());
+        log.info("Adding quiz to course ID: {}", createQuizRequest.courseId());
         Course course = courseRepository.findById(createQuizRequest.courseId()).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + createQuizRequest.courseId()));
 
-        if (!course.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
-            throw new AuthenticationException("You are not assigned to add quiz to another organization's course");
+        CourseAssignment courseAssignment = courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId()
+                        , userInfo.getOrganization().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+
+        if (!courseAssignment.getOrganization().getId().equals(userInfo.getOrganization().getId())) {
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            throw new AuthenticationException("You are not assigned to add lecture to another organization's course");
         }
 
         Quiz quiz = quizRepository.save(buildQuiz(createQuizRequest));
-        Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseId(course.getId());
+        Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseIdIsDeletedFalse(course.getId());
         CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, quiz, lastSequence));
 
         QuizSection quizSection = quizSectionRepository.save(buildQuizSection(createQuizRequest, quiz));
@@ -176,37 +219,48 @@ public class CourseServiceImpl implements CourseService {
             questionRepository.save(question);
         }
 
-        setProgressForUsers(course, courseContent);
-        logger.info("Quiz added successfully to course ID: {}", createQuizRequest.courseId());
+        log.info("Quiz added successfully to course ID: {}", createQuizRequest.courseId());
 
         return buildQuizResponse(createQuizRequest, quiz);
     }
 
     @Override
     public Page<CourseResponse> getCoursePage(CourseFilterRequest courseFilterRequest, Pageable pageable) {
-        logger.info("Fetching course page with filters: {}", courseFilterRequest);
+        log.info("Fetching course page with filters: {}", courseFilterRequest);
         courseFilterRequest.setOrganizationId(userInfo.getUser().getOrganization().getId());
 
-        CourseSpecification courseSpecification = new CourseSpecification(isSuperAdmin(),
+        CourseSpecification courseSpecification = new CourseSpecification(isSuperAdminOrAdmin(),
                 courseFilterRequest,
                 appConstants.getDefaultId());
 
-        return courseRepository.findAll(courseSpecification, pageable).map(CourseServiceImpl::buildCourseResponse);
+        Page<CourseAssignment> courseAssignments = courseAssignmentRepository.
+                findAll(courseSpecification, pageable);
+
+        List<CourseResponse> courseResponses = courseAssignments.get().toList().stream().map(courseAssignment -> {
+            Completion completion = completionRepository
+                    .findByCourseIdAndUserIdAndIsDeletedFalse(courseAssignment.getCourse().getId()
+                            , userInfo.getUser().getId()).orElse(null);
+            return buildCourseResponsePage(courseAssignment.getCourse(), completion);
+        }).toList();
+
+        return new PageImpl<>(courseResponses, pageable, courseResponses.size());
+
     }
 
     @Override
     @Transactional
-    public CourseResponse confirmCourseAssignment(String courseId) {
-        logger.info("Confirming course assignment for course ID: {}", courseId);
-        var courseAssignment = courseAssignmentRepository.findByCourseId(courseId).orElseThrow(() ->
-                new ResourceNotFoundException("CourseAssignment not found with this courseId: " + courseId));
+    public CourseResponse confirmCourseAssignment(String assignmentId) {
+        log.info("Confirming course assignment for assignment ID: {}", assignmentId);
+        var courseAssignment = courseAssignmentRepository.findByIdAndIsDeletedFalse(assignmentId).orElseThrow(() ->
+                new ResourceNotFoundException("CourseAssignment not found with this id: " + assignmentId));
 
         if (!courseAssignment.getOrganization().getId().equals(userInfo.getUser().getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
             throw new AuthenticationException("You are not allowed to take this action");
         }
-        courseRepository.updateById(courseId);
+        courseRepository.updateById(courseAssignment.getCourse().getId());
         courseAssignment.setConfirmed(true);
+        courseAssignment.getCourse().setIsVisible(true);
         var savedAssignment = courseAssignmentRepository.save(courseAssignment);
 
         return buildCourseResponse(savedAssignment.getCourse());
@@ -215,21 +269,34 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public void delete(String courseId) {
-        logger.info("Deleting course with ID: {}", courseId);
+        log.info("Deleting course with ID: {}", courseId);
         Course course = courseRepository.findById(courseId).orElseThrow(() ->
                 new ResourceNotFoundException("Course not found with this id: " + courseId));
 
         if (!userInfo.getUser().getOrganization().getId().equals(course.getOrganization().getId())) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
             throw new AuthenticationException("You are not allowed to delete another organization's course.");
         }
         course.setIsVisible(false);
-        courseRepository.save(course);
+
+        CourseAssignment courseAssignment = courseAssignmentRepository
+                .findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId(), userInfo.getOrganization().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course assignment not found"));
+
+        courseAssignment.setIsDeleted(true);
+
+        courseAssignmentRepository.save(courseAssignment);
     }
 
     @Override
     public LectureResponse completeLecture(String lectureId) {
-        logger.info("Completing lecture with ID: {}", lectureId);
+        log.info("Completing lecture with ID: {}", lectureId);
+        Integer sequenceNum = courseContentRepository.findSequenceNumberByLectureId(lectureId);
+        CourseContent content = progressRepository
+                .getLastCompletedContentByUserId(userInfo.getUser().getId()).orElse(null);
+        if (content != null && !content.getSequenceNumber().equals(sequenceNum - 1))
+            throw new PermissionDeniedException("Users have to complete parts in order!");
+
         Progress progress = findProgressByLectureIdAndUserId(lectureId);
 
         if (!(progress.getCourse().getOrganization().getType() == OrganizationType.MAIN))
@@ -240,9 +307,92 @@ public class CourseServiceImpl implements CourseService {
             var completion = buildCompletion(progress);
             completionRepository.save(completion);
         }
-        logger.info("User: {} - completed lecture with ID: {}", userInfo.getUser().getId(), lectureId);
 
-        return lectureResponseBuilder(progress.getContent().getLecture(), true);
+        log.info("User: {} - completed lecture with ID: {}", userInfo.getUser().getId(), lectureId);
+
+        return lectureResponseBuilder(progress.getContent().getLecture(), progress.getIsCompleted());
+    }
+
+    @Override
+    public List<CourseAssignResponse> assign(CourseAssignRequest courseAssignRequest) {
+        Course course = courseRepository.findById(courseAssignRequest.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found. Course id:" + courseAssignRequest.courseId()));
+
+        List<Organization> organizations = courseAssignRequest.organizationsId().stream().map(organizationId ->
+                organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization not found. ID:" + organizationId))).toList();
+
+        List<CourseAssignment> courseAssignment = courseAssignmentRepository.saveAll(organizations.stream().map(organization ->
+                buildCourseAssignment(course, organization, false)).toList());
+
+        return courseAssignment.stream().map(courseAssignment1 ->
+                buildCourseAssignResponse(courseAssignment1, course)).toList();
+    }
+
+    @Override
+    public List<CourseAssignResponse> getAssignments() {
+        List<CourseAssignment> courseAssignments = courseAssignmentRepository
+                .findAllByOrganizationIdAndIsDeletedFalse(userInfo.getOrganization().getId());
+
+        return courseAssignments
+                .stream()
+                .map(courseAssignment -> buildCourseAssignResponse(courseAssignment, courseAssignment.getCourse()))
+                .toList();
+    }
+
+    @Override
+    public CourseResponse update(CourseUpdateRequest courseUpdateRequest) {
+        log.info("Course update process starting... -->CourseId:"+courseUpdateRequest.courseId());
+        Course existingCourse = courseRepository.findById(courseUpdateRequest.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found, CourseId:" + courseUpdateRequest.courseId()));
+
+        validateOrganizationAccess(existingCourse.getOrganization().getId());
+
+        checkNotEmptyAndNotNullAndSetFieldExistingCourse(courseUpdateRequest, existingCourse);
+
+        courseRepository.save(existingCourse);
+
+        log.info("Course {} updated successfully",existingCourse.getId());
+        return buildCourseResponse(existingCourse);
+    }
+
+    private static void checkNotEmptyAndNotNullAndSetFieldExistingCourse(CourseUpdateRequest courseUpdateRequest, Course existingCourse) {
+        if (courseUpdateRequest.name() != null && !courseUpdateRequest.name().isEmpty()) {
+            existingCourse.setName(courseUpdateRequest.name());
+        }
+        if (courseUpdateRequest.pictureUrl() != null && !courseUpdateRequest.pictureUrl().isEmpty()) {
+            existingCourse.setPictureUrl(courseUpdateRequest.pictureUrl());
+        }
+        if (courseUpdateRequest.description() != null && !courseUpdateRequest.description().isEmpty()) {
+            existingCourse.setDescription(courseUpdateRequest.description());
+        }
+        if (courseUpdateRequest.tags() != null && !courseUpdateRequest.tags().isEmpty()) {
+            existingCourse.setTags(courseUpdateRequest.tags());
+        }
+        if (courseUpdateRequest.availablePoint() != null) {
+            existingCourse.setAvailablePoint(courseUpdateRequest.availablePoint());
+        }
+        if (courseUpdateRequest.duration() != null && !courseUpdateRequest.duration().isEmpty()) {
+            existingCourse.setDuration(courseUpdateRequest.duration());
+        }
+        if (courseUpdateRequest.instructor() != null && !courseUpdateRequest.instructor().isEmpty()) {
+            existingCourse.setInstructor(courseUpdateRequest.instructor());
+        }
+        if (courseUpdateRequest.title() != null && !courseUpdateRequest.title().isEmpty()) {
+            existingCourse.setTitle(courseUpdateRequest.title());
+        }
+    }
+
+    private static CourseAssignResponse buildCourseAssignResponse(CourseAssignment courseAssignment1, Course course) {
+        return CourseAssignResponse.builder()
+                .assignmentId(courseAssignment1.getId())
+                .courseId(course.getId())
+                .courseName(course.getName())
+                .organizationName(courseAssignment1.getOrganization().getName())
+                .organizationId(courseAssignment1.getOrganization().getId())
+                .assignedDate(new Date())
+                .confirmed(courseAssignment1.getConfirmed())
+                .build();
     }
 
     private Integer calculateRateOfProgress(List<Progress> progresses) {
@@ -261,19 +411,19 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private Progress findProgressByLectureIdAndUserId(String lectureId) {
-        return progressRepository.findByLectureIdAndUserId(lectureId, userInfo.getUser().getId())
+        return progressRepository.findByLectureIdAndUserIdAndIsDeletedFalse(lectureId, userInfo.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lecture not found with this id: " + lectureId));
     }
 
     private Progress findProgressByQuizIdAndUserId(String quizId) {
-        return progressRepository.findByQuizIdAndUserId(quizId, userInfo.getUser().getId())
+        return progressRepository.findByQuizIdAndUserIdAndIsDeletedFalse(quizId, userInfo.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Progress not found with this quizId: " + quizId));
     }
 
     private void validateOrganizationAccess(String contentOrganizationId) {
         if (!userInfo.getUser().getOrganization().getId().equals(contentOrganizationId)) {
-            logger.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
-            throw new AuthenticationException("You are not assigned to complete another organization's content.");
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            throw new AuthenticationException("You are not assigned to access another organization's course.");
         }
     }
 
@@ -286,11 +436,6 @@ public class CourseServiceImpl implements CourseService {
         List<Boolean> isCompletedList = progressRepository.findIsCompletedByCourseIdAndUserId(
                 progress.getCourse().getId(), userInfo.getUser().getId());
         return checkIsCompletedAllContents(isCompletedList);
-    }
-
-    private String findOrganizationIdByQuizId(String quizId) {
-        return courseContentRepository.findOrganizationIdByQuizIdNative(quizId)
-                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
     }
 
     private List<Question> findQuestionsByQuizId(String quizId) {
@@ -307,7 +452,7 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    private static Progress buildProgressWhenContentCreated(User user, Course course, CourseContent courseContent) {
+    private static Progress buildProgress(User user, Course course, CourseContent courseContent) {
         return Progress.builder()
                 .user(user)
                 .course(course)
@@ -324,18 +469,6 @@ public class CourseServiceImpl implements CourseService {
         return true;
     }
 
-    private void setProgressForUsers(Course course, CourseContent courseContent) {
-        List<User> users;
-
-        if (isSuperAdmin())
-            users = userRepository.findAll();
-        else
-            users = userRepository.findUsersByOrganizationIdAndIsActiveTrue(userInfo.getUser().getOrganization().getId());
-
-        List<Progress> progresses = users.stream().map(user -> buildProgressWhenContentCreated(user, course, courseContent)).toList();
-
-        progressRepository.saveAll(progresses);
-    }
 
     private static int getIncorrectCount(QuizCompleteRequest quizCompleteRequest, List<Question> questions) {
         int incorrectCount = 0;
@@ -356,6 +489,14 @@ public class CourseServiceImpl implements CourseService {
     private Boolean isSuperAdmin() {
         for (Role role : userInfo.getUser().getRoles()) {
             if (role.getRole() == RoleType.SUPER_ADMIN)
+                return true;
+        }
+        return false;
+    }
+
+    private Boolean isSuperAdminOrAdmin() {
+        for (Role role : userInfo.getUser().getRoles()) {
+            if ((role.getRole() == RoleType.SUPER_ADMIN) || (role.getRole() == RoleType.ADMIN))
                 return true;
         }
         return false;
@@ -450,14 +591,6 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    private CourseAssignment buildCourseAssignmentByRole(Course savedCourse,
-                                                         Organization organization) {
-        if (isSuperAdmin())
-            return buildCourseAssignment(savedCourse, organization, false);
-
-        return buildCourseAssignment(savedCourse, organization, true);
-    }
-
 
     private CourseAssignment buildCourseAssignment(Course savedCourse, Organization organization, Boolean confirmed) {
         return CourseAssignment.builder()
@@ -475,12 +608,27 @@ public class CourseServiceImpl implements CourseService {
                 .tags(course.getTags())
                 .title(course.getTitle())
                 .pictureUrl(course.getPictureUrl())
-                .organizationName(course.getOrganization().getName())
                 .availablePoint(course.getAvailablePoint())
                 .description(course.getDescription())
                 .duration(course.getDuration())
                 .instructor(course.getInstructor())
                 .isVisible(course.getIsVisible())
+                .build();
+    }
+
+    private static CourseResponse buildCourseResponsePage(Course course, Completion completion) {
+        return CourseResponse.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .tags(course.getTags())
+                .title(course.getTitle())
+                .pictureUrl(course.getPictureUrl())
+                .availablePoint(course.getAvailablePoint())
+                .description(course.getDescription())
+                .duration(course.getDuration())
+                .instructor(course.getInstructor())
+                .isVisible(course.getIsVisible())
+                .isCompleted(completion != null)
                 .build();
     }
 
@@ -505,7 +653,6 @@ public class CourseServiceImpl implements CourseService {
                 .description(courseRequest.description())
                 .instructor(courseRequest.instructor())
                 .duration(courseRequest.duration())
-                .isDeleted(false)
                 .isVisible(isVisible)
                 .availablePoint(courseRequest.availablePoint())
                 .build();

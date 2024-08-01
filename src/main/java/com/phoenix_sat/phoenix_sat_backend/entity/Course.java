@@ -4,6 +4,7 @@ import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "courses")
@@ -14,6 +15,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Course extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
@@ -34,9 +36,6 @@ public class Course extends BaseEntity {
     private String description;
     private String instructor;
     private String duration;
-
-    @Column(name = "is_deleted")
-    private Boolean isDeleted;
 
     @Column(name = "is_visible")
     private Boolean isVisible;

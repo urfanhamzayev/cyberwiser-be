@@ -1,7 +1,5 @@
 package com.phoenix_sat.phoenix_sat_backend.service;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.Course;
-import com.phoenix_sat.phoenix_sat_backend.entity.CourseAssignment;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import org.springframework.data.domain.Page;
@@ -24,11 +22,17 @@ public interface CourseService {
 
     Page<CourseResponse> getCoursePage(CourseFilterRequest courseFilterRequest, Pageable pageable);
 
-    CourseResponse confirmCourseAssignment(String courseId);
+    CourseResponse confirmCourseAssignment(String assignmentId);
 
     void delete(String courseId);
 
     LectureResponse completeLecture(String lectureId);
+
+    List<CourseAssignResponse> assign(CourseAssignRequest courseAssignRequest);
+
+    List<CourseAssignResponse> getAssignments();
+
+    CourseResponse update(CourseUpdateRequest courseUpdateRequest);
 }
 
 

@@ -13,14 +13,10 @@ import java.util.List;
 @Builder
 public class UserProgressReport {
     private String userId;
-    private String userName;
+    private String userFullName;
     private String uerEmail;
-    private List<InProgressCourses> inProgresses;
-    private List<CompletedCourse> completed;
-
-    // TODO: update as below structure
-    //private List<CourseStatistics> completedCourse ( add one more field as response (COMPLETED/NOT_COMPLETED))
-    //private List<CourseStatistics> notCompletedCourse
-    // int countCompletedCourse
-    // int countNotCompletedCourse
+    private List<CourseStatistics> completedCourses;
+    private List<CourseStatistics> notCompletedCourses;
+    private int countCompletedCourse;
+    private int countNotCompletedCourse;
 }

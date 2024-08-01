@@ -1,5 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.Course;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/courses")
@@ -25,8 +27,21 @@ public class CourseController {
     // 4) Admin can create a course /edit a course/delete a course
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
-    public CourseResponse create(@RequestBody CreateCourseRequest courseRequest) {
+    public CourseResponse create(@RequestBody @Valid CreateCourseRequest courseRequest) {
         return courseService.create(courseRequest);
+    }
+
+    @PutMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
+    public CourseResponse update(@RequestBody CourseUpdateRequest courseUpdateRequest) {
+        return courseService.update(courseUpdateRequest);
+
+    }
+
+    @PostMapping("/assign")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    public List<CourseAssignResponse> assign(@RequestBody @Valid CourseAssignRequest courseAssignRequest) {
+        return courseService.assign(courseAssignRequest);
     }
 
     @GetMapping("{courseId}")
@@ -63,10 +78,10 @@ public class CourseController {
     }
 
 
-    @PutMapping("/{courseId}/confirm")
-    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
-    public CourseResponse confirmCourseAssignment(@PathVariable String courseId) {
-        return courseService.confirmCourseAssignment(courseId);
+    @PutMapping("/{assignmentId}/confirm")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public CourseResponse confirmCourseAssignment(@PathVariable String assignmentId) {
+        return courseService.confirmCourseAssignment(assignmentId);
     }
 
     @DeleteMapping("/{courseId}")
@@ -80,4 +95,9 @@ public class CourseController {
         return courseService.completeLecture(lectureId);
     }
 
+    @GetMapping("/assignments")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<CourseAssignResponse> getAssignments() {
+        return courseService.getAssignments();
+    }
 }

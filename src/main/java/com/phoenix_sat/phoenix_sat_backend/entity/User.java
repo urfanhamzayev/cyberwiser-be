@@ -1,12 +1,12 @@
 package com.phoenix_sat.phoenix_sat_backend.entity;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.converter.RoleTypeConverter;
 import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
-import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.ParamDef;
 
 import java.util.Set;
 
@@ -19,6 +19,17 @@ import java.util.Set;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@FilterDef(
+        name = "userFilter",
+        parameters = {
+                @ParamDef(name = "isDeleted", type = Boolean.class),
+                @ParamDef(name = "isActive", type = Boolean.class)
+        }
+)
+@Filter(
+        name = "userFilter",
+        condition = "is_deleted = :isDeleted AND is_active = :isActive"
+)
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
@@ -34,22 +45,28 @@ public class User extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
-            joinColumns ={@JoinColumn(name = "user_id", referencedColumnName = "id")},
-            inverseJoinColumns ={@JoinColumn(name = "role_id", referencedColumnName = "id")}
+            joinColumns = {@JoinColumn(name = "user_id", referencedColumnName = "id")},
+            inverseJoinColumns = {@JoinColumn(name = "role_id", referencedColumnName = "id")}
     )
     private Set<Role> roles;
 
     @Column(name = "picture_url")
     private String pictureUrl;
 
-    private String name;
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     private String email;
     private String password;
-
-    // Todo firstName, lastName should be added . remove name part.
-
 
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = false;
+
+    public String getFullName() {
+        return this.firstName+" "+this.lastName;
+    }
 }

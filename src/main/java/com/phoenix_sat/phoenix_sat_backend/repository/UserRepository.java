@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByIdAndIsActiveTrue(String id);
 
+    Boolean existsByEmailAndIsActiveTrueAndIsDeletedFalse(String email);
+
     @Transactional
     @Modifying
     @Query("update User u set u.isActive = false where u.id =:userId")
@@ -23,4 +25,9 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("Select u from User u where u.organization.id=:organizationId and u.isActive=true")
     List<User> findUsersByOrganizationIdAndIsActiveTrue(String organizationId);
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.isActive = :isActive, u.isDeleted = :isDeleted where u.organization.id =:organizationId")
+    void updateUsersIsActiveByOrganizationId(Boolean isActive, Boolean isDeleted, String organizationId);
 }

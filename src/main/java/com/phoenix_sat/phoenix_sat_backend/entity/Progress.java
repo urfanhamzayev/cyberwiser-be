@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "progress")
@@ -14,6 +15,7 @@ import jakarta.persistence.*;
 @Builder
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@SQLRestriction("is_deleted = false")
 public class Progress extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")

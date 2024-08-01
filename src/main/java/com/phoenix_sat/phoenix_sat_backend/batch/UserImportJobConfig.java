@@ -60,7 +60,7 @@ public class UserImportJobConfig {
         DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
         lineTokenizer.setDelimiter(",");
         lineTokenizer.setStrict(false);
-        lineTokenizer.setNames("name", "email", "role");
+        lineTokenizer.setNames("fullName", "email", "role");
 
         lineMapper.setLineTokenizer(lineTokenizer);
         lineMapper.setFieldSetMapper(new UserFieldMapper(organizationId));

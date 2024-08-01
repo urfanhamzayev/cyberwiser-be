@@ -4,7 +4,7 @@ import com.phoenix_sat.phoenix_sat_backend.entity.generator.IdGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.context.annotation.Primary;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "quizzes")
@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Primary;
 @NoArgsConstructor
 @ToString
 @Builder
-@EqualsAndHashCode
-public class Quiz  {
+@SQLRestriction("is_deleted = false")
+public class Quiz extends BaseEntity {
     @Id
     @GeneratedValue(generator = "idGenerator")
     @GenericGenerator(name = "idGenerator", type = IdGenerator.class)

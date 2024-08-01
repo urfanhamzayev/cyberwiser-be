@@ -18,4 +18,9 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
     void updateById(String id);
 
     List<Course> findAllByOrganizationId(String organizationId);
+
+    @Transactional
+    @Modifying
+    @Query("Update Course c set c.isVisible =:isActive , c.isDeleted =:isDeleted where c.organization.id=:organizationId")
+    void updateCoursesIsActiveAndIsDeletedByOrganizationId(Boolean isActive, Boolean isDeleted, String organizationId);
 }

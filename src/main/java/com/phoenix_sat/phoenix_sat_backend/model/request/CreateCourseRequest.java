@@ -1,17 +1,17 @@
 package com.phoenix_sat.phoenix_sat_backend.model.request;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 public record CreateCourseRequest(
-        String name,
-        String pictureUrl,
-        String tags,
-        String title,
+        @NotEmpty String name,
+        @NotEmpty String pictureUrl,
+        @NotEmpty String tags,
+        @NotEmpty String title,
         String description,
-        String instructor,
-        String duration,
-        Integer availablePoint
+        @NotEmpty String instructor,
+        @NotEmpty String duration,
+        @NotNull Integer availablePoint
 ) {
 }
