@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, String>, JpaSpecificationExecutor<Course> {
@@ -18,6 +20,8 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
     void updateById(String id);
 
     List<Course> findAllByOrganizationId(String organizationId);
+
+    Optional<Course> findByIdAndIsDeletedFalseAndIsVisibleTrue(String courseId);
 
     @Transactional
     @Modifying

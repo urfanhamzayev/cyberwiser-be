@@ -1,0 +1,51 @@
+<!-- src/main/resources/templates/certificate.mustache -->
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: #555;
+            font-size: 28px;
+            margin: 20px 0;
+        }
+
+        p {
+            color: #777;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .certificate-container {
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="certificate-container">
+    <h1>Certificate of Completion</h1>
+    <p>This is to certify that</p>
+    <h2>{{fullName}}</h2>
+    <p>has successfully completed the course</p>
+    <h2>{{courseName}}</h2>
+    <p>on {{completionDate}}</p>
+</div>
+</body>
+</html>

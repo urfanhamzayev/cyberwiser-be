@@ -1,6 +1,5 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.Course;
 import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
@@ -8,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,7 +80,6 @@ public class CourseController {
         return courseService.getCoursePage(courseFilterRequest, pageable);
     }
 
-
     @PutMapping("/{assignmentId}/confirm")
     @PreAuthorize("hasAuthority('ADMIN')")
     public CourseResponse confirmCourseAssignment(@PathVariable String assignmentId) {
@@ -99,5 +101,14 @@ public class CourseController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<CourseAssignResponse> getAssignments() {
         return courseService.getAssignments();
+    }
+
+    @GetMapping("/{courseId}/report")
+    public ResponseEntity<byte[]> generateCompletionReport(@PathVariable String courseId) {
+        byte[] pdf = courseService.generateCompletionReport(courseId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "certificate.pdf");
+        return new ResponseEntity<>(pdf,headers, HttpStatus.OK);
     }
 }

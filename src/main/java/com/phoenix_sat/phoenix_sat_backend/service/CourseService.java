@@ -33,6 +33,8 @@ public interface CourseService {
     List<CourseAssignResponse> getAssignments();
 
     CourseResponse update(CourseUpdateRequest courseUpdateRequest);
+
+    byte[] generateCompletionReport(String courseId);
 }
 
 

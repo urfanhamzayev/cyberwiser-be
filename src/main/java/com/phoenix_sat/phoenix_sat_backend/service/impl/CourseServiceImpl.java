@@ -16,18 +16,23 @@ import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
+import com.phoenix_sat.phoenix_sat_backend.service.loader.CustomMustacheTemplateLoader;
 import com.phoenix_sat.phoenix_sat_backend.spesification.CourseSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +54,9 @@ public class CourseServiceImpl implements CourseService {
     private final UserRepository userRepository;
     private final CompletionRepository completionRepository;
     private final OrganizationRepository organizationRepository;
+
+    @Qualifier(value = "customMustacheTemplateLoader")
+    private final CustomMustacheTemplateLoader customMustacheTemplateLoader;
 
     @Transactional
     @Override
@@ -136,7 +144,8 @@ public class CourseServiceImpl implements CourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
         CourseContent lastCompletedCourseContent = progressRepository
-                .getLastCompletedContentByUserId(userInfo.getUser().getId()).orElse(null);
+                .getLastCompletedContentByUserIdAndCourseId(userInfo.getUser().getId(), courseContent.getCourse().getId())
+                .orElse(null);
 
         log.info("Checking quiz's order with the sequence number, QuizId:" + quizCompleteRequest.quizId());
 
@@ -211,7 +220,7 @@ public class CourseServiceImpl implements CourseService {
 
         Quiz quiz = quizRepository.save(buildQuiz(createQuizRequest));
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseIdIsDeletedFalse(course.getId());
-        CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, quiz, lastSequence));
+        courseContentRepository.save(buildCourseContent(course, quiz, lastSequence));
 
         QuizSection quizSection = quizSectionRepository.save(buildQuizSection(createQuizRequest, quiz));
         for (int i = 0; i < createQuizRequest.questionRequestList().size(); i++) {
@@ -291,10 +300,17 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public LectureResponse completeLecture(String lectureId) {
         log.info("Completing lecture with ID: {}", lectureId);
+
+        CourseContent currentContent = courseContentRepository.findByLectureIdAndIsDeletedFalse(lectureId)
+                .orElseThrow(() -> new ResourceNotFoundException("Content not found with the lecture ID:" + lectureId));
+
         Integer sequenceNum = courseContentRepository.findSequenceNumberByLectureId(lectureId);
-        CourseContent content = progressRepository
-                .getLastCompletedContentByUserId(userInfo.getUser().getId()).orElse(null);
-        if (content != null && !content.getSequenceNumber().equals(sequenceNum - 1))
+
+        CourseContent lastCompletedContent = progressRepository
+                .getLastCompletedContentByUserIdAndCourseId(userInfo.getUser().getId(), currentContent.getCourse().getId())
+                .orElse(null);
+
+        if (lastCompletedContent != null && !lastCompletedContent.getSequenceNumber().equals(sequenceNum - 1))
             throw new PermissionDeniedException("Users have to complete parts in order!");
 
         Progress progress = findProgressByLectureIdAndUserId(lectureId);
@@ -342,7 +358,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseResponse update(CourseUpdateRequest courseUpdateRequest) {
-        log.info("Course update process starting... -->CourseId:"+courseUpdateRequest.courseId());
+        log.info("Course update process starting... -->CourseId:" + courseUpdateRequest.courseId());
         Course existingCourse = courseRepository.findById(courseUpdateRequest.courseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found, CourseId:" + courseUpdateRequest.courseId()));
 
@@ -352,8 +368,56 @@ public class CourseServiceImpl implements CourseService {
 
         courseRepository.save(existingCourse);
 
-        log.info("Course {} updated successfully",existingCourse.getId());
+        log.info("Course {} updated successfully", existingCourse.getId());
         return buildCourseResponse(existingCourse);
+    }
+
+    @Override
+    public byte[] generateCompletionReport(String courseId) {
+        Course course = courseRepository.findByIdAndIsDeletedFalseAndIsVisibleTrue(courseId).orElseThrow(() ->
+                new ResourceNotFoundException("Course is not exist with id:" + courseId));
+
+        courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId(), userInfo.getOrganization().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+
+        Completion completion = completionRepository.findByCourseIdAndUserIdAndIsDeletedFalse(course.getId(), userInfo.getUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Certificate can't be generated without completion."));
+
+        return generateCertificate(userInfo.getUser(), course,completion.getCompletionDate());
+    }
+
+    public byte[] generateCertificate(User user, Course course, Date completionDate) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", user.getFullName());
+        data.put("courseName", course.getName());
+        data.put("completionDate", getFormattedDate(completionDate));
+
+        String htmlContent = customMustacheTemplateLoader.loadTemplate("certificate.mustache", data);
+
+        return convertHtmlToPdf(htmlContent);
+    }
+
+    private static String getFormattedDate(Date completionDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        return dateFormat.format(completionDate);
+    }
+
+    private byte[] convertHtmlToPdf(String htmlContent) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            ITextRenderer renderer = new ITextRenderer();
+
+            // Set the base URL to resolve relative paths (if you have images or other resources)
+            String baseUrl = CourseServiceImpl.class.getResource("/templates/").toString();
+            renderer.setDocumentFromString(htmlContent, baseUrl);
+
+            renderer.layout();
+            renderer.createPDF(outputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF", e);
+        }
+
+        return outputStream.toByteArray();
     }
 
     private static void checkNotEmptyAndNotNullAndSetFieldExistingCourse(CourseUpdateRequest courseUpdateRequest, Course existingCourse) {
@@ -429,6 +493,7 @@ public class CourseServiceImpl implements CourseService {
 
     private void markProgressAsCompleted(Progress progress) {
         progress.setIsCompleted(true);
+        progress.setUpdateDate(new Date());
         progressRepository.save(progress);
     }
 
