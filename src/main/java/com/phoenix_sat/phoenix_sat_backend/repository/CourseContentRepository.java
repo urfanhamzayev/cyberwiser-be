@@ -45,4 +45,5 @@ public interface CourseContentRepository extends JpaRepository<CourseContent, St
     @Query("select coalesce(cc.sequenceNumber,0) from CourseContent cc where cc.lecture.id=:lectureId")
     Integer findSequenceNumberByLectureId(String lectureId);
 
+    Optional<CourseContent> findByLectureIdAndIsDeletedFalse(String lectureId);
 }

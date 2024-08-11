@@ -20,8 +20,6 @@ import java.util.logging.Logger;
 public class UserController {
     private final UserService userService;
 
-
-
     @GetMapping("/profile")
     public UserProfileResponse getUserProfile() {
         return userService.getUserProfile();
@@ -31,6 +29,4 @@ public class UserController {
     public UserProgressReport getUserProgress() {
         return userService.getUserProgress();
     }
-
-
 }

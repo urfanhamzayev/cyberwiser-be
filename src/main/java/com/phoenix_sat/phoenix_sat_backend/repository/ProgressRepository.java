@@ -40,12 +40,13 @@ public interface ProgressRepository extends JpaRepository<Progress, String> {
 
     @Query("SELECT p.content FROM Progress p " +
            "WHERE p.user.id = :userId " +
+            "AND p.course.id = :courseId "+
            "AND p.isCompleted = true " +
-           "ORDER BY p.createDate DESC")
-    List<CourseContent> findLastCompletedContentsByUserId(String userId);
+           "ORDER BY p.updateDate DESC")
+    List<CourseContent> findLastCompletedContentsByUserIdAndCourseId(String userId,String courseId);
 
-    default Optional<CourseContent> getLastCompletedContentByUserId(String userId) {
-        List<CourseContent> courseContents = findLastCompletedContentsByUserId(userId);
+    default Optional<CourseContent> getLastCompletedContentByUserIdAndCourseId(String userId, String courseId) {
+        List<CourseContent> courseContents = findLastCompletedContentsByUserIdAndCourseId(userId,courseId);
 
         return courseContents.isEmpty()? Optional.empty() : Optional.of(courseContents.get(0));
     }
