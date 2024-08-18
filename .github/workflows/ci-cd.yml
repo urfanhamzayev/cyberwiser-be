@@ -50,7 +50,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: sat-backend-app-task-definition.json
-          container-name: springboot-example
+          container-name: sat-backend
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
@@ -58,5 +58,5 @@ jobs:
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: sat-backend-service
-          cluster: DevCluster2
+          cluster: dev-sat-phoenix-cluster-v1
           wait-for-service-stability: true
