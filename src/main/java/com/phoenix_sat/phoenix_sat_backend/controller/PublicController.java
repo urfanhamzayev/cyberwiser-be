@@ -1,6 +1,7 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
 import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
+import com.phoenix_sat.phoenix_sat_backend.model.request.RegistrationCompletionRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserRegisterResponse;
@@ -26,6 +27,12 @@ public class PublicController {
                                          @RequestBody
                                          @Valid UserRegisterRequest userRegisterRequest) {
         return userService.register(organizationId, userRegisterRequest);
+    }
+
+    @PostMapping("/registration-complete/{verificationId}")
+    public JwtToken completeRegistration(@PathVariable String verificationId,
+                                         @RequestBody @Valid RegistrationCompletionRequest completionRequest) {
+        return userService.completeRegistration(verificationId, completionRequest);
     }
 
 }

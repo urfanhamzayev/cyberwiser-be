@@ -58,4 +58,16 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleResourceAlreadyExistException(ResourceAlreadyExistException e) {
         return new ErrorResponse(HttpStatus.CONFLICT,e.getMessage());
     }
+
+    @ExceptionHandler(EmailServiceException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleEmailServiceException(EmailServiceException e) {
+        return new ErrorResponse(HttpStatus.CONFLICT,e.getMessage());
+    }
+
+    @ExceptionHandler(RegistrationVerificationSessionIsExpiredException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleRegistrationVerificationSessionIsExpiredException(RegistrationVerificationSessionIsExpiredException e) {
+        return new ErrorResponse(HttpStatus.FORBIDDEN,e.getMessage());
+    }
 }

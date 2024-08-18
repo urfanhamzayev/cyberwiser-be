@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByIdAndIsActiveTrue(String id);
 
+    Optional<User> findByIdAndIsActiveFalse(String id);
+
     Boolean existsByEmailAndIsActiveTrueAndIsDeletedFalse(String email);
 
     @Transactional

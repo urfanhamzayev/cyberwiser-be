@@ -1,5 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
+import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserProfileResponse;
@@ -29,4 +30,6 @@ public class UserController {
     public UserProgressReport getUserProgress() {
         return userService.getUserProgress();
     }
+
+
 }

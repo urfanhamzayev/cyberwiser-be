@@ -1,5 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
+import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRequest;
 import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
@@ -40,7 +41,7 @@ public class UserImportJobConfig {
     private final PlatformTransactionManager platformTransactionManager;
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
-
+    private final CustomEventPublisher customEventPublisher;
     @Bean
     @StepScope
     @SneakyThrows
@@ -98,7 +99,7 @@ public class UserImportJobConfig {
     @Bean
     @StepScope
     public UserItemWriter userItemWriter() {
-        return new UserItemWriter(this.userRepository, this.organizationRepository);
+        return new UserItemWriter(this.userRepository, this.organizationRepository, this.customEventPublisher);
     }
 
     @Bean("userItemProcessor")

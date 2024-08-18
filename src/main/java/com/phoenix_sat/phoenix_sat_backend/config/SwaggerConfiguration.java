@@ -35,8 +35,9 @@ public class SwaggerConfiguration {
 
     public List<Server> getServers() {
         List<Server> servers = new LinkedList<>();
-//        servers.add(new Server().url(swaggerConstants.getBaseUrl()));
+        servers.add(new Server().url("http://35.232.217.186"));
         servers.add(new Server().url("http://localhost:8080"));
+
         return servers;
     }
 }

@@ -313,4 +313,18 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="15-08-2024-create_registration_verification_session_table" author="Samadov Nijat">
+        <createTable tableName="registration_verification_sessions">
+            <column name="id" type="char(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="char(32)"/>
+            <column name="verification_id" type="char(32)"/>
+            <column name="is_verified" type="boolean"/>
+            <column name="is_deleted" type="boolean"/>
+            <column name="create_date" type="timestamp without timezone"/>
+            <column name="update_date" type="timestamp without timezone"/>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>
