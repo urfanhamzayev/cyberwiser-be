@@ -16,7 +16,6 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 public class SwaggerConfiguration {
-//    private final SwaggerConstants swaggerConstants;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -35,7 +34,6 @@ public class SwaggerConfiguration {
 
     public List<Server> getServers() {
         List<Server> servers = new LinkedList<>();
-//        servers.add(new Server().url(swaggerConstants.getBaseUrl()));
         servers.add(new Server().url("http://3.67.71.24:8080"));
         servers.add(new Server().url("http://localhost:8080"));
         return servers;
