@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sat-phoenix
+  namespace: eks-sat-phoenix-backend
+  labels:
+    app: sat-phoenix
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sat-phoenix
+  template:
+    metadata:
+      labels:
+        app: sat-phoenix
+    spec:
+      containers:
+        - name: sat-phoenix
+          image: 009160065729.dkr.ecr.eu-central-1.amazonaws.com/sat-phoenix:version-2
+          ports:
+            - containerPort: 80
+      imagePullSecrets:
+        - name: regcred  # Reference to the Docker registry secret
