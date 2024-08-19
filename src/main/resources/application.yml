@@ -13,7 +13,7 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view:
-    show-sql: false
+    show-sql: true
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
     default-schema: ${PHOENIX_BACKEND_DB_SCHEMA:public}
@@ -25,6 +25,16 @@ spring:
     jdbc:
       initialize-schema: always
 
+cloud:
+  aws:
+    region:
+      static: ${PHOENIX_BACKEND_AWS_EMAIL_REGION-STATIC:eu-central-1}
+      auto: false
+    stack:
+      auto: false
+    credentials:
+      access-key: ${PHOENIX_BACKEND_AWS_EMAIL_ACCESS_KEY}
+      secret-key: ${PHOENIX_BACKEND_AWS_EMAIL_SECRET_KEY}
 
 
 security:

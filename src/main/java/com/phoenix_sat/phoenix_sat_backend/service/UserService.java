@@ -1,9 +1,9 @@
 package com.phoenix_sat.phoenix_sat_backend.service;
 
 import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
+import com.phoenix_sat.phoenix_sat_backend.model.request.RegistrationCompletionRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
-import com.phoenix_sat.phoenix_sat_backend.model.response.CourseContentResponse;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserProfileResponse;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserProgressReport;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserRegisterResponse;
@@ -20,4 +20,6 @@ public interface UserService {
     List<UserProgressReport> getAllUserProgress();
 
     UserRegisterResponse register(String organizationId, UserRegisterRequest userRegisterRequest);
+
+    JwtToken completeRegistration(String verificationId, RegistrationCompletionRequest completionRequest);
 }

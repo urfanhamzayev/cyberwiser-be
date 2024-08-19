@@ -3,9 +3,11 @@ package com.phoenix_sat.phoenix_sat_backend.service.impl;
 import com.phoenix_sat.phoenix_sat_backend.entity.*;
 import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.RegistrationVerificationSessionIsExpiredException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceAlreadyExistException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
+import com.phoenix_sat.phoenix_sat_backend.model.request.RegistrationCompletionRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
@@ -16,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -36,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final CourseAssignmentRepository courseAssignmentRepository;
     private final OrganizationRepository organizationRepository;
     private final RoleRepository roleRepository;
+    private final RegistrationVerificationSessionRepository verificationSessionRepository;
 
     @Override
     public JwtToken logIn(UserLoginRequest userLoginRequest) {
@@ -88,6 +94,51 @@ public class UserServiceImpl implements UserService {
                 .fullName(savedUser.getFullName())
                 .build();
 
+    }
+
+    @Transactional
+    @Override
+    public JwtToken completeRegistration(String verificationId, RegistrationCompletionRequest completionRequest) {
+        var verificationSession = verificationSessionRepository.findByVerificationIdAndIsVerifiedFalse(verificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Verification session not found. id-" + verificationId));
+
+        var user = userRepository.findByIdAndIsActiveFalse(verificationSession.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found. id-" + verificationSession.getUserId()));
+
+        if (isExpiredVerificationSession(verificationSession))
+            throw new RegistrationVerificationSessionIsExpiredException("Session is expired. id-" + verificationId);
+
+        String encodedPassword = passwordEncoder.encode(completionRequest.password());
+
+        setPasswordAndIsActiveAndUpdateDate(user, encodedPassword);
+        var updatedUser = userRepository.save(user);
+
+        markVerificationSessionAsVerifiedAndDeleted(verificationSession);
+        verificationSessionRepository.save(verificationSession);
+
+        return buildJwtToken(updatedUser);
+    }
+
+    private void markVerificationSessionAsVerifiedAndDeleted(RegistrationVerificationSession verificationSession) {
+        verificationSession.setIsVerified(true);
+        verificationSession.setIsDeleted(true);
+        verificationSession.setUpdateDate(new Date());
+    }
+
+    private void setPasswordAndIsActiveAndUpdateDate(User user, String encodedPassword) {
+        user.setPassword(encodedPassword);
+        user.setIsActive(true);
+        user.setUpdateDate(new Date());
+    }
+
+    private boolean isExpiredVerificationSession(RegistrationVerificationSession verificationSession) {
+        Date createDate = verificationSession.getCreateDate();
+        Instant createInstant = createDate.toInstant(); // Convert Date to Instant
+        Instant now = Instant.now();
+
+        long hoursElapsed = ChronoUnit.HOURS.between(createInstant, now);
+
+        return hoursElapsed >= 24;
     }
 
     private User buildUserFromRegisterRequest(UserRegisterRequest userRegisterRequest, Organization organization) {

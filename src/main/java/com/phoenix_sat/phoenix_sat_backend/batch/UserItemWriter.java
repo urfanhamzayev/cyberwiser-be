@@ -1,22 +1,25 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
+import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
 import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
+import com.phoenix_sat.phoenix_sat_backend.event.RegistrationVerificationEvent;
 import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Slf4j
 public class UserItemWriter implements ItemWriter<User> {
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
+    private final CustomEventPublisher customEventPublisher;
 
+    @Transactional
     @Override
     public void write(Chunk<? extends User> items) throws Exception {
         if (items.isEmpty())
@@ -30,5 +33,7 @@ public class UserItemWriter implements ItemWriter<User> {
         userRepository.saveAll(items);
         log.info("All user from csv file is saved to the database.");
         log.info("Job's ended successfully");
+
+        customEventPublisher.publish(new RegistrationVerificationEvent(items.getItems()));
     }
 }

@@ -34,16 +34,25 @@ dependencies {
     implementation 'com.auth0:java-jwt:4.0.0'
     testImplementation 'org.springframework.batch:spring-batch-test'
     implementation 'org.springframework.boot:spring-boot-starter-batch'
-
     implementation 'org.springframework.boot:spring-boot-starter-mustache'
-
     implementation 'org.xhtmlrenderer:flying-saucer-pdf:9.1.22'
-
-    // iText (for PDF rendering)
     implementation 'com.itextpdf:itext7-core:7.2.3'
-
-    // XML Worker (if using XHTML features)
     implementation 'com.itextpdf.tool:xmlworker:5.5.13.2'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation "io.awspring.cloud:spring-cloud-starter-aws-ses"
+
+    implementation 'com.sun.mail:javax.mail:1.6.2' // JavaMail dependency
+
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+
+
+
+}
+dependencyManagement {
+    imports {
+        mavenBom "io.awspring.cloud:spring-cloud-aws-dependencies:2.3.0"
+    }
 }
 
 tasks.named('test') {

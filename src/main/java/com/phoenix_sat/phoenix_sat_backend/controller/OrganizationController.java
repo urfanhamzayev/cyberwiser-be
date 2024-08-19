@@ -1,7 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
-import com.phoenix_sat.phoenix_sat_backend.mark.Create;
-import com.phoenix_sat.phoenix_sat_backend.mark.Update;
+import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationUpdateRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.OrganizationResponse;
@@ -12,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,7 +51,7 @@ public class OrganizationController {
         return HttpStatus.OK;
     }
 
-    @PostMapping(value = "/import", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public HttpStatus importUsers(@RequestPart MultipartFile file) {
         organizationService.importUsersFromFile(file);
