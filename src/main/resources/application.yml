@@ -2,9 +2,9 @@ spring:
   application:
     name: phoenix-sat-backend
   datasource:
-    url: jdbc:postgresql://${PHOENIX_BACKEND_DB_HOST:localhost}:${PHOENIX_BACKEND_DB_PORT:5442}/${PHOENIX_BACKEND_DB_NAME:sat_backend}?currentSchema=${PHOENIX_BACKEND_DB_SCHEMA:public}
-    username: ${PHOENIX_BACKEND_DB_USERNAME:app}
-    password: ${PHOENIX_BACKEND_DB_PASSWORD:admin}
+    url: jdbc:postgresql://sat-phoenix-rds-db.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/postgres?currentSchema=${PHOENIX_BACKEND_DB_SCHEMA:public}
+    username: postgres
+    password: <ae5|%of3:5h3zjrJXBHT|n|M46U
   jpa:
     properties:
       hibernate:
