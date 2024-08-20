@@ -59,7 +59,8 @@ security:
       /v2/api-docs,
       /api/v1/public/**,
       /ws-registration/**,
-      /api/v1/public/accounts/**
+      /api/v1/public/accounts/**,
+      /
 
   jwt:
     secret-key: ${PHOENIX_BACKEND_JWT_SECRET_KEY:test}
