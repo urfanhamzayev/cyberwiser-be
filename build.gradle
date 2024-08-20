@@ -40,13 +40,9 @@ dependencies {
     implementation 'com.itextpdf.tool:xmlworker:5.5.13.2'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation "io.awspring.cloud:spring-cloud-starter-aws-ses"
-
     implementation 'com.sun.mail:javax.mail:1.6.2' // JavaMail dependency
-
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-
-
-
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
 
 }
 dependencyManagement {

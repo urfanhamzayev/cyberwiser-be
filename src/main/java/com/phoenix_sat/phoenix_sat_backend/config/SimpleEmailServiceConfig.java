@@ -4,11 +4,10 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
-import com.phoenix_sat.phoenix_sat_backend.constant.AwsEmailConstants;
+import com.phoenix_sat.phoenix_sat_backend.constant.AwsConstants;
 import io.awspring.cloud.ses.SimpleEmailServiceJavaMailSender;
 import io.awspring.cloud.ses.SimpleEmailServiceMailSender;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.MailSender;
@@ -18,15 +17,15 @@ import org.springframework.mail.javamail.JavaMailSender;
 @RequiredArgsConstructor
 public class SimpleEmailServiceConfig {
 
-    private final AwsEmailConstants awsEmailConstants;
+    private final AwsConstants awsConstants;
 
     @Bean
     public AmazonSimpleEmailService amazonSimpleEmailService() {
-        BasicAWSCredentials credentials = new BasicAWSCredentials(awsEmailConstants.getAccessKey(),
-                awsEmailConstants.getSecretKey());
+        BasicAWSCredentials credentials = new BasicAWSCredentials(awsConstants.getAccessKeyForEmail(),
+                awsConstants.getSecretKeyForEmail());
         return AmazonSimpleEmailServiceClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(awsEmailConstants.getRegion())
+                .withRegion(awsConstants.getRegion())
                 .build();
     }
 

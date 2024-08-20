@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://sat-phoenix-rds-db.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/postgres?currentSchema=${PHOENIX_BACKEND_DB_SCHEMA:public}
     username: postgres
-    password: <ae5|%of3:5h3zjrJXBHT|n|M46U
+    password: ?)QKQz_G7ks7#J))]55X~J6Thtsh
   jpa:
     properties:
       hibernate:
@@ -36,6 +36,12 @@ cloud:
       access-key: ${PHOENIX_BACKEND_AWS_EMAIL_ACCESS_KEY:AKIAQEIP3QLAWMHEFJVJ}
       secret-key: ${PHOENIX_BACKEND_AWS_EMAIL_SECRET_KEY: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}
 
+aws:
+  s3:
+    bucket-name: dev-batch-process-file
+    region: eu-central-1
+    access-key: AKIAQEIP3QLAWMHEFJVJ
+    secret-key: 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
 
 security:
   auth:
