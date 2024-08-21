@@ -1,10 +1,4 @@
 spring:
-  web:
-    cors:
-      allowed-origins: "*"
-      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
-      allowed-headers: "*"
-      allow-credentials: true
   application:
     name: phoenix-sat-backend
   datasource:
