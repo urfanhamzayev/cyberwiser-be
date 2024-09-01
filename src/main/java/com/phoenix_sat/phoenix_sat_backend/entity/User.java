@@ -65,9 +65,7 @@ public class User extends BaseEntity {
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
-    public String getOrganizationId() {
-        return this.organization.getId();
-    }
+
 
     public String getFullName() {
         return this.firstName + " " + this.lastName;

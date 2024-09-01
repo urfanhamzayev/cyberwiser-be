@@ -68,7 +68,7 @@ public class CourseServiceImpl implements CourseService {
         User user = userInfo.getUser();
         Organization organization = user.getOrganization();
 
-        String pictureKeyName = user.getOrganizationId() + courseRequest.picture().getOriginalFilename() + Util.generateRandomUUID();
+        String pictureKeyName = user.getOrganization().getId() + courseRequest.picture().getOriginalFilename() + Util.generateRandomUUID();
         s3Service.uploadFile(pictureKeyName, courseRequest.picture());
 
         Course savedCourse = courseRepository.save(buildCourse(courseRequest, organization, false, pictureKeyName));
@@ -397,7 +397,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     public String generateKeyNameForS3(MultipartFile file) {
-        return userInfo.getUser().getOrganizationId() + file.getOriginalFilename() + Util.generateRandomUUID();
+        return userInfo.getUser().getOrganization().getId() + file.getOriginalFilename() + Util.generateRandomUUID();
     }
 
     public byte[] generateCertificate(User user, Course course, Date completionDate) {
