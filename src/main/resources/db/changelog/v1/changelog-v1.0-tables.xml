@@ -43,7 +43,7 @@
             <column name="last_name" type="varchar(50)"/>
             <column name="email" type="varchar(50)"/>
             <column name="password" type="varchar(255)"/>
-            <column name="picture_url" type="varchar(100)"/>
+            <column name="profile_picture_key" type="varchar(100)"/>
             <column name="is_active" type="boolean"/>
             <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
@@ -76,7 +76,7 @@
             </column>
             <column name="name" type="varchar(255)"/>
             <column name="tags" type="varchar(255)"/>
-            <column name="picture_url" type="varchar(255)"/>
+            <column name="picture_key" type="varchar(255)"/>
             <column name="organization_id" type="char(32)"/>
             <column name="title" type="VARCHAR(255)"/>
             <column name="description" type="TEXT"/>
@@ -102,7 +102,7 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="title" type="VARCHAR(255)"/>
-            <column name="video_url" type="VARCHAR(255)"/>
+            <column name="video_key" type="VARCHAR(255)"/>
             <column name="duration" type="VARCHAR(50)"/>
             <column name="is_deleted" type="boolean"/>
             <column name="create_date" type="timestamp without timezone"/>
@@ -326,5 +326,12 @@
             <column name="update_date" type="timestamp without timezone"/>
         </createTable>
     </changeSet>
+
+    <changeSet id="22-08-2024-add_logo_key_name_column_to_organizations" author="Samadov Nijat">
+        <addColumn tableName="organizations">
+            <column name="logo_key_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

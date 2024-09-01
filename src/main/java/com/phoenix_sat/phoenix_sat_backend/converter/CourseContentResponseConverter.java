@@ -46,7 +46,7 @@ public class CourseContentResponseConverter {
                     .lectureId(content.getLecture().getId())
                     .duration(content.getLecture().getDuration())
                     .title(content.getLecture().getTitle())
-                    .videoUrl(content.getLecture().getVideoUrl())
+                    .videoKey(content.getLecture().getVideoKey())
                     .contentType(ContentType.LECTURE)
                     .isCompleted(progress.getIsCompleted())
                     .build();

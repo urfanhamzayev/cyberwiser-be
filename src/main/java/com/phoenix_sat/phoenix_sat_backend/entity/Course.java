@@ -28,8 +28,8 @@ public class Course extends BaseEntity {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
-    @Column(name = "picture_url")
-    private String pictureUrl;
+    @Column(name = "picture_key")
+    private String pictureKey;
 
     private String tags;
     private String title;

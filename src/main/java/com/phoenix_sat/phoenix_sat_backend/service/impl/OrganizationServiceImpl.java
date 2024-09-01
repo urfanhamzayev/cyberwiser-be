@@ -1,18 +1,22 @@
 package com.phoenix_sat.phoenix_sat_backend.service.impl;
 
-import com.phoenix_sat.phoenix_sat_backend.entity.BaseEntity;
-import com.phoenix_sat.phoenix_sat_backend.entity.Completion;
+import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
 import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
+import com.phoenix_sat.phoenix_sat_backend.entity.Role;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
+import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.PermissionDeniedException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
+import com.phoenix_sat.phoenix_sat_backend.event.RegistrationVerificationEvent;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationUpdateRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.OrganizationResponse;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserInfo;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
-import com.phoenix_sat.phoenix_sat_backend.service.FileService;
 import com.phoenix_sat.phoenix_sat_backend.service.OrganizationService;
+import com.phoenix_sat.phoenix_sat_backend.service.S3Service;
+import com.phoenix_sat.phoenix_sat_backend.util.UserUtil;
+import com.phoenix_sat.phoenix_sat_backend.util.Util;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -22,13 +26,14 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -47,20 +52,52 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final LectureRepository lectureRepository;
     private final CourseContentRepository courseContentRepository;
     private final UserInfo userInfo;
-    private final FileService fileService;
     private final JobLauncher jobLauncher;
     @Qualifier(value = "importUsersJob")
     private final Job userCsvImportJob;
-
-
     @Resource(name = "requestScopedUser")
     UserInfo currentUserInfo;
+    private final S3ServiceImpl s3ServiceImpl;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomEventPublisher eventPublisher;
+    private final S3Service s3Service;
 
 
     @Override
-    public OrganizationResponse create(OrganizationRequest organizationRequest) {
+    public OrganizationResponse create(@RequestBody OrganizationRequest organizationRequest) {
+        if (!isSuperAdmin())
+            throw new PermissionDeniedException("You don't have permission to create organization. UserId: "
+                                                +userInfo.getUser().getId());
+
+
         Organization organization = organizationRepository.save(buildOrganization(organizationRequest));
+
+        String keyNameForLogo = organization.getId() + organizationRequest.logo().getOriginalFilename() + Util.generateRandomUUID();
+        organization.setLogoKeyName(keyNameForLogo);
+        organizationRepository.save(organization);
+
+        s3Service.uploadFile(keyNameForLogo, organizationRequest.logo());
+
+        String temporaryPassword = UserUtil.getTemporaryPasswordForUser();
+
+        User user = buildUser(organizationRequest,organization, temporaryPassword);
+
+        userRepository.save(user);
+
+        eventPublisher.publish(new RegistrationVerificationEvent(List.of(user),List.of(temporaryPassword)));
+
+
         return buildOrganizationResponse(organization);
+    }
+
+    private User buildUser(OrganizationRequest organizationRequest,Organization organization, String temporaryPassword) {
+        return User.builder()
+                .email(organizationRequest.adminEmail())
+                .firstName(getUserFirstNameByFullname(organizationRequest.adminFullname()))
+                .lastName(getUserLastNameByFullname(organizationRequest.adminFullname()))
+                .password(passwordEncoder.encode(temporaryPassword))
+                .organization(organization)
+                .build();
     }
 
     @Transactional
@@ -72,7 +109,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (!userInfo.getUser().getOrganization().getId().equals(user.getOrganization().getId()))
             throw new PermissionDeniedException("You do not have permission to perform this action.");
 
-        userRepository.updateById(user.getId());
+        userRepository.updateIsActiveAndIsDeletedById(user.getId(), false, true);
     }
 
     @SneakyThrows
@@ -80,7 +117,8 @@ public class OrganizationServiceImpl implements OrganizationService {
     public void importUsersFromFile(MultipartFile file) {
         log.info("User importing from csv file is starting... UserId: {} , OrgId: {}", userInfo.getUser().getId(), userInfo.getOrganization().getId());
         String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-        fileService.saveFile(file.getBytes(), fileName);
+//        fileService.saveFile(file.getBytes(), fileName);
+        s3ServiceImpl.uploadFile(fileName, file);
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("filename", fileName)
                 .addString("organizationId", currentUserInfo.getOrganization().getId())
@@ -98,10 +136,10 @@ public class OrganizationServiceImpl implements OrganizationService {
         Organization existingOrganization = organizationRepository.findById(userInfo.getOrganization().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
 
-        checkIsNotEmptyAndNullAndSetFieldExistingOrganization(organizationUpdateRequest, existingOrganization);
+        updateOrganization(organizationUpdateRequest, existingOrganization);
 
         Organization updatedOrganization = organizationRepository.save(existingOrganization);
-        log.info("Organization {} updated successfully", userInfo.getOrganization().getId());
+        log.info("Organization {} updated successfully", userInfo.getOrganization().toString());
         return buildOrganizationResponse(updatedOrganization);
 
     }
@@ -126,6 +164,33 @@ public class OrganizationServiceImpl implements OrganizationService {
         organizationRepository.save(organization);
     }
 
+
+    private boolean isSuperAdmin() {
+        for (Role role : userInfo.getUser().getRoles()) {
+            if (role.getRole() == RoleType.SUPER_ADMIN)
+                return true;
+        }
+        return false;
+    }
+
+    private String getUserFirstNameByFullname(String fullname) {
+        return fullname.split(" ")[0];
+    }
+
+    private static void updateOrganization(OrganizationUpdateRequest organizationUpdateRequest, Organization existingOrganization) {
+        existingOrganization.setCountry(organizationUpdateRequest.country());
+        existingOrganization.setName(organizationUpdateRequest.organizationName());
+        existingOrganization.setDescription(organizationUpdateRequest.description());
+        existingOrganization.setEmail(organizationUpdateRequest.email());
+        existingOrganization.setIndustry(organizationUpdateRequest.industry());
+        existingOrganization.setNumEmployees(organizationUpdateRequest.numEmployees());
+        existingOrganization.setPhoneNumber(organizationUpdateRequest.phoneNumber());
+    }
+
+    private String getUserLastNameByFullname(String fullname) {
+        return fullname.split(" ")[1];
+    }
+
     private void setIsDeletedTrueInAllTablesByOrganizationId(Organization organization) {
         completionRepository.updateIsDeletedTrueByOrganizationId(true, organization.getId());
         courseContentRepository.updateIsDeletedByCourseId(true, organization.getId());
@@ -141,33 +206,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
 
-    private static void checkIsNotEmptyAndNullAndSetFieldExistingOrganization(OrganizationUpdateRequest organizationRequest,
-                                                                              Organization existingOrganization) {
-        if (organizationRequest.organizationName() != null && !organizationRequest.organizationName().isEmpty()) {
-            existingOrganization.setName(organizationRequest.organizationName());
-        }
-        if (organizationRequest.email() != null && !organizationRequest.email().isEmpty()) {
-            existingOrganization.setEmail(organizationRequest.email());
-        }
-        if (organizationRequest.description() != null && !organizationRequest.description().isEmpty()) {
-            existingOrganization.setDescription(organizationRequest.description());
-        }
-        if (organizationRequest.phoneNumber() != null && !organizationRequest.phoneNumber().isEmpty()) {
-            existingOrganization.setPhoneNumber(organizationRequest.phoneNumber());
-        }
-        if (organizationRequest.numEmployees() != null) {
-            existingOrganization.setNumEmployees(organizationRequest.numEmployees());
-        }
-        if (organizationRequest.country() != null && !organizationRequest.country().isEmpty()) {
-            existingOrganization.setCountry(organizationRequest.country());
-        }
-        if (organizationRequest.industry() != null && !organizationRequest.industry().isEmpty()) {
-            existingOrganization.setIndustry(organizationRequest.industry());
-        }
-        if (organizationRequest.domain() != null && !organizationRequest.domain().isEmpty()) {
-            existingOrganization.setDomain(organizationRequest.domain());
-        }
-    }
+
 
     private static OrganizationResponse buildOrganizationResponse(Organization organization) {
         return OrganizationResponse.builder().
@@ -181,20 +220,25 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .description(organization.getDescription())
                 .numEmployees(organization.getNumEmployees())
                 .phoneNumber(organization.getPhoneNumber())
+                .logoKeyName(organization.getLogoKeyName())
                 .build();
     }
 
     private static Organization buildOrganization(OrganizationRequest organizationRequest) {
         return Organization.builder().type(organizationRequest.organizationType())
                 .name(organizationRequest.organizationName())
+                .type(organizationRequest.organizationType())
+                .email(organizationRequest.email())
+                .domain(organizationRequest.domain())
+                .industry(organizationRequest.industry())
+                .country(organizationRequest.country())
+                .description(organizationRequest.description())
+                .numEmployees(organizationRequest.numEmployees())
+                .phoneNumber(organizationRequest.phoneNumber())
                 .build();
     }
 
-    private List<? extends BaseEntity> setIsDeleted(Boolean isDeleted, List<? extends BaseEntity> objects) {
-        return objects.stream().peek(baseEntity -> baseEntity.setIsDeleted(isDeleted)).collect(Collectors.toList());
-    }
-
-    private void setCompletionIsDeleted(Boolean isDeleted, List<Completion> completionList) {
-        completionList.stream().peek(completion -> completion.setIsDeleted(isDeleted));
+    public static String generateRandomUUID() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }

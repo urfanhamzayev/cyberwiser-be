@@ -16,8 +16,10 @@ import com.phoenix_sat.phoenix_sat_backend.model.request.*;
 import com.phoenix_sat.phoenix_sat_backend.model.response.*;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
 import com.phoenix_sat.phoenix_sat_backend.service.CourseService;
+import com.phoenix_sat.phoenix_sat_backend.service.S3Service;
 import com.phoenix_sat.phoenix_sat_backend.service.loader.CustomMustacheTemplateLoader;
 import com.phoenix_sat.phoenix_sat_backend.spesification.CourseSpecification;
+import com.phoenix_sat.phoenix_sat_backend.util.Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,12 +28,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -54,6 +55,7 @@ public class CourseServiceImpl implements CourseService {
     private final UserRepository userRepository;
     private final CompletionRepository completionRepository;
     private final OrganizationRepository organizationRepository;
+    private final S3Service s3Service;
 
     @Qualifier(value = "customMustacheTemplateLoader")
     private final CustomMustacheTemplateLoader customMustacheTemplateLoader;
@@ -66,7 +68,10 @@ public class CourseServiceImpl implements CourseService {
         User user = userInfo.getUser();
         Organization organization = user.getOrganization();
 
-        Course savedCourse = courseRepository.save(getCourse(courseRequest, organization, false));
+        String pictureKeyName = user.getOrganizationId() + courseRequest.picture().getOriginalFilename() + Util.generateRandomUUID();
+        s3Service.uploadFile(pictureKeyName, courseRequest.picture());
+
+        Course savedCourse = courseRepository.save(buildCourse(courseRequest, organization, false, pictureKeyName));
 
         log.info("Course saved with ID: {}", savedCourse.getId());
 
@@ -183,20 +188,16 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public LectureResponse addLecture(CreateLectureRequest createLectureRequest) {
         log.info("Adding lecture to course ID: {}", createLectureRequest.courseId());
-        Course course = courseRepository.findById(createLectureRequest.courseId()).orElseThrow(() ->
-                new ResourceNotFoundException("Course not found with this id: " + createLectureRequest.courseId()));
-        CourseAssignment courseAssignment = courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId()
-                        , userInfo.getOrganization().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+        Course course = checkCourseAndCourseAssignmentIsExistAndIsAllowedAccessibility(createLectureRequest.courseId());
 
-        if (!courseAssignment.getOrganization().getId().equals(userInfo.getOrganization().getId())) {
-            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
-            throw new AuthenticationException("You are not assigned to add lecture to another organization's course");
-        }
+        String videoKeyName = generateKeyNameForS3(createLectureRequest.video());
+
+        s3Service.uploadFile(videoKeyName, createLectureRequest.video());
 
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseIdIsDeletedFalse(course.getId());
-        Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest));
-        CourseContent courseContent = courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
+        Lecture lecture = lectureRepository.save(buildLecture(createLectureRequest, videoKeyName));
+        courseContentRepository.save(buildCourseContent(course, lecture, lastSequence));
+
         log.info("Lecture added successfully to course ID: {}", createLectureRequest.courseId());
 
         return lectureResponseBuilder(lecture, false);
@@ -206,17 +207,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public QuizResponse addQuiz(CreateQuizRequest createQuizRequest) {
         log.info("Adding quiz to course ID: {}", createQuizRequest.courseId());
-        Course course = courseRepository.findById(createQuizRequest.courseId()).orElseThrow(() ->
-                new ResourceNotFoundException("Course not found with this id: " + createQuizRequest.courseId()));
 
-        CourseAssignment courseAssignment = courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId()
-                        , userInfo.getOrganization().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
-
-        if (!courseAssignment.getOrganization().getId().equals(userInfo.getOrganization().getId())) {
-            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
-            throw new AuthenticationException("You are not assigned to add lecture to another organization's course");
-        }
+        Course course = checkCourseAndCourseAssignmentIsExistAndIsAllowedAccessibility(createQuizRequest.courseId());
 
         Quiz quiz = quizRepository.save(buildQuiz(createQuizRequest));
         Integer lastSequence = courseContentRepository.findLastSequenceNumberByCourseIdIsDeletedFalse(course.getId());
@@ -231,6 +223,22 @@ public class CourseServiceImpl implements CourseService {
         log.info("Quiz added successfully to course ID: {}", createQuizRequest.courseId());
 
         return buildQuizResponse(createQuizRequest, quiz);
+    }
+
+    private Course checkCourseAndCourseAssignmentIsExistAndIsAllowedAccessibility(String courseId) {
+
+        Course course = courseRepository.findById(courseId).orElseThrow(() ->
+                new ResourceNotFoundException("Course not found with this id: " + courseId));
+
+        CourseAssignment courseAssignment = courseAssignmentRepository.findByCourseIdAndOrganizationIdAndConfirmedTrue(course.getId()
+                        , userInfo.getOrganization().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+
+        if (!courseAssignment.getOrganization().getId().equals(userInfo.getOrganization().getId())) {
+            log.warn("Unauthorized access detected userId: {}", userInfo.getUser().getId());
+            throw new AuthenticationException("You are not assigned to add content to another organization's course");
+        }
+        return course;
     }
 
     @Override
@@ -309,6 +317,8 @@ public class CourseServiceImpl implements CourseService {
         CourseContent lastCompletedContent = progressRepository
                 .getLastCompletedContentByUserIdAndCourseId(userInfo.getUser().getId(), currentContent.getCourse().getId())
                 .orElse(null);
+        if (lastCompletedContent == null && !currentContent.getSequenceNumber().equals(1))
+            throw new PermissionDeniedException("Users have to complete parts in order!");
 
         if (lastCompletedContent != null && !lastCompletedContent.getSequenceNumber().equals(sequenceNum - 1))
             throw new PermissionDeniedException("Users have to complete parts in order!");
@@ -364,7 +374,7 @@ public class CourseServiceImpl implements CourseService {
 
         validateOrganizationAccess(existingCourse.getOrganization().getId());
 
-        checkNotEmptyAndNotNullAndSetFieldExistingCourse(courseUpdateRequest, existingCourse);
+//        checkNotEmptyAndNotNullAndSetFieldExistingCourse(courseUpdateRequest, existingCourse);
 
         courseRepository.save(existingCourse);
 
@@ -383,7 +393,11 @@ public class CourseServiceImpl implements CourseService {
         Completion completion = completionRepository.findByCourseIdAndUserIdAndIsDeletedFalse(course.getId(), userInfo.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate can't be generated without completion."));
 
-        return generateCertificate(userInfo.getUser(), course,completion.getCompletionDate());
+        return generateCertificate(userInfo.getUser(), course, completion.getCompletionDate());
+    }
+
+    public String generateKeyNameForS3(MultipartFile file) {
+        return userInfo.getUser().getOrganizationId() + file.getOriginalFilename() + Util.generateRandomUUID();
     }
 
     public byte[] generateCertificate(User user, Course course, Date completionDate) {
@@ -420,32 +434,6 @@ public class CourseServiceImpl implements CourseService {
         return outputStream.toByteArray();
     }
 
-    private static void checkNotEmptyAndNotNullAndSetFieldExistingCourse(CourseUpdateRequest courseUpdateRequest, Course existingCourse) {
-        if (courseUpdateRequest.name() != null && !courseUpdateRequest.name().isEmpty()) {
-            existingCourse.setName(courseUpdateRequest.name());
-        }
-        if (courseUpdateRequest.pictureUrl() != null && !courseUpdateRequest.pictureUrl().isEmpty()) {
-            existingCourse.setPictureUrl(courseUpdateRequest.pictureUrl());
-        }
-        if (courseUpdateRequest.description() != null && !courseUpdateRequest.description().isEmpty()) {
-            existingCourse.setDescription(courseUpdateRequest.description());
-        }
-        if (courseUpdateRequest.tags() != null && !courseUpdateRequest.tags().isEmpty()) {
-            existingCourse.setTags(courseUpdateRequest.tags());
-        }
-        if (courseUpdateRequest.availablePoint() != null) {
-            existingCourse.setAvailablePoint(courseUpdateRequest.availablePoint());
-        }
-        if (courseUpdateRequest.duration() != null && !courseUpdateRequest.duration().isEmpty()) {
-            existingCourse.setDuration(courseUpdateRequest.duration());
-        }
-        if (courseUpdateRequest.instructor() != null && !courseUpdateRequest.instructor().isEmpty()) {
-            existingCourse.setInstructor(courseUpdateRequest.instructor());
-        }
-        if (courseUpdateRequest.title() != null && !courseUpdateRequest.title().isEmpty()) {
-            existingCourse.setTitle(courseUpdateRequest.title());
-        }
-    }
 
     private static CourseAssignResponse buildCourseAssignResponse(CourseAssignment courseAssignment1, Course course) {
         return CourseAssignResponse.builder()
@@ -623,7 +611,7 @@ public class CourseServiceImpl implements CourseService {
                 .lectureId(lecture.getId())
                 .contentType(ContentType.LECTURE)
                 .isCompleted(isCompleted)
-                .videoUrl(lecture.getVideoUrl())
+                .videoKey(lecture.getVideoKey())
                 .title(lecture.getTitle())
                 .build();
     }
@@ -631,19 +619,21 @@ public class CourseServiceImpl implements CourseService {
     private static CourseContent buildCourseContent(Course course, Object content, Integer lastSequence) {
         var courseContent = CourseContent.builder()
                 .course(course)
-                .type(ContentType.QUIZ)
                 .sequenceNumber(lastSequence == null ? 1 : lastSequence + 1)
                 .build();
-        if (content instanceof Lecture)
+        if (content instanceof Lecture) {
             courseContent.setLecture((Lecture) content);
-        else if (content instanceof Quiz)
+            courseContent.setType(ContentType.LECTURE);
+        } else if (content instanceof Quiz) {
             courseContent.setQuiz((Quiz) content);
+            courseContent.setType(ContentType.QUIZ);
+        }
         return courseContent;
     }
 
-    private static Lecture buildLecture(CreateLectureRequest createLectureRequest) {
+    private static Lecture buildLecture(CreateLectureRequest createLectureRequest, String videoKey) {
         return Lecture.builder()
-                .videoUrl(createLectureRequest.videoUrl())
+                .videoKey(videoKey)
                 .title(createLectureRequest.title())
                 .duration(createLectureRequest.duration())
                 .build();
@@ -672,7 +662,7 @@ public class CourseServiceImpl implements CourseService {
                 .name(course.getName())
                 .tags(course.getTags())
                 .title(course.getTitle())
-                .pictureUrl(course.getPictureUrl())
+                .pictureUrl(course.getPictureKey())
                 .availablePoint(course.getAvailablePoint())
                 .description(course.getDescription())
                 .duration(course.getDuration())
@@ -687,7 +677,7 @@ public class CourseServiceImpl implements CourseService {
                 .name(course.getName())
                 .tags(course.getTags())
                 .title(course.getTitle())
-                .pictureUrl(course.getPictureUrl())
+                .pictureUrl(course.getPictureKey())
                 .availablePoint(course.getAvailablePoint())
                 .description(course.getDescription())
                 .duration(course.getDuration())
@@ -697,22 +687,14 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    private Course buildCourseByRole(CreateCourseRequest courseRequest, Organization organization) {
-        if (isAdmin()) {
-            return getCourse(courseRequest, organization, true);
-        }
-        if (isSuperAdmin()) {
-            return getCourse(courseRequest, organization, false);
-        }
-        return null;
 
-    }
-
-    private static Course getCourse(CreateCourseRequest courseRequest, Organization organization, Boolean isVisible) {
+    private static Course buildCourse(CreateCourseRequest courseRequest
+            , Organization organization
+            , Boolean isVisible
+            , String pictureKey) {
         return Course.builder()
                 .name(courseRequest.name())
                 .organization(organization)
-                .pictureUrl(courseRequest.pictureUrl())
                 .tags(courseRequest.tags())
                 .title(courseRequest.title())
                 .description(courseRequest.description())

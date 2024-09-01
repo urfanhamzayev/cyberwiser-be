@@ -50,8 +50,8 @@ public class User extends BaseEntity {
     )
     private Set<Role> roles;
 
-    @Column(name = "picture_url")
-    private String pictureUrl;
+    @Column(name = "profile_picture_key")
+    private String profilePictureKey;
 
     @Column(name = "first_name")
     private String firstName;
@@ -64,9 +64,13 @@ public class User extends BaseEntity {
 
     @Column(name = "is_active")
     @Builder.Default
-    private Boolean isActive = false;
+    private Boolean isActive = true;
+    public String getOrganizationId() {
+        return this.organization.getId();
+    }
 
     public String getFullName() {
-        return this.firstName+" "+this.lastName;
+        return this.firstName + " " + this.lastName;
     }
+
 }

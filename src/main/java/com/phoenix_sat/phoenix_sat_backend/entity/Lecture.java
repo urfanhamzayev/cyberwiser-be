@@ -25,6 +25,6 @@ public class Lecture extends BaseEntity{
     private String title;
     private String duration;
 
-    @JoinColumn(name = "video_url")
-    private String videoUrl;
+    @JoinColumn(name = "video_key")
+    private String videoKey;
 }

@@ -1,8 +1,13 @@
 package com.phoenix_sat.phoenix_sat_backend.constant;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
 @Configuration
 @Data
@@ -24,5 +29,6 @@ public class AwsConstants {
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
+    
 
 }

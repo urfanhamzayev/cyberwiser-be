@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://sat-phoenix-rds-db.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/postgres?currentSchema=${PHOENIX_BACKEND_DB_SCHEMA:public}
     username: postgres
-    password: ?)QKQz_G7ks7#J))]55X~J6Thtsh
+    password: .7jWsfG|.3KGYo*t-QAL_#)445)K
   jpa:
     properties:
       hibernate:
@@ -24,17 +24,23 @@ spring:
       enabled: false
     jdbc:
       initialize-schema: always
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+#  config:
+#    import: aws-secretsmanager:/sat-ses-credential
 
 cloud:
   aws:
     region:
-      static: ${PHOENIX_BACKEND_AWS_EMAIL_REGION-STATIC:eu-central-1}
+      static: eu-central-1
       auto: false
     stack:
       auto: false
     credentials:
-      access-key: ${PHOENIX_BACKEND_AWS_EMAIL_ACCESS_KEY:AKIAQEIP3QLAWMHEFJVJ}
-      secret-key: ${PHOENIX_BACKEND_AWS_EMAIL_SECRET_KEY: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}
+      access-key: ${AWS_ACCESS_KEY_ID:AKIAQEIP3QLAWMHEFJVJ}
+      secret-key: ${AWS_SECRET_ACCESS_KEY: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}
 
 aws:
   s3:

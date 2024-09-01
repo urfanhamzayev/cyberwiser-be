@@ -23,14 +23,9 @@ import java.util.List;
 public class CourseController {
     private final CourseService courseService;
 
-    // TODO:
-    // 1) User can only see their confirmed course +
-    // 2)  Admin can see only his course, assigned by super admin course both (comfirmed/not comfirmed) +
-    // 3) Super admin can see only main course +
-    // 4) Admin can create a course /edit a course/delete a course
-    @PostMapping
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
-    public CourseResponse create(@RequestBody @Valid CreateCourseRequest courseRequest) {
+    public CourseResponse create(@ModelAttribute @Valid CreateCourseRequest courseRequest) {
         return courseService.create(courseRequest);
     }
 
@@ -38,7 +33,6 @@ public class CourseController {
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public CourseResponse update(@RequestBody CourseUpdateRequest courseUpdateRequest) {
         return courseService.update(courseUpdateRequest);
-
     }
 
     @PostMapping("/assign")
@@ -62,9 +56,9 @@ public class CourseController {
         return courseService.completeQuiz(quizCompleteRequest);
     }
 
-    @PostMapping("/lecture")
+    @PostMapping(value = "/lecture", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
-    public LectureResponse addLecture(@RequestBody @Valid CreateLectureRequest createLectureRequest) {
+    public LectureResponse addLecture(@ModelAttribute @Valid CreateLectureRequest createLectureRequest) {
         return courseService.addLecture(createLectureRequest);
     }
 
@@ -109,6 +103,6 @@ public class CourseController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", "certificate.pdf");
-        return new ResponseEntity<>(pdf,headers, HttpStatus.OK);
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 }

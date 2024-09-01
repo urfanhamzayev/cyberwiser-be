@@ -1,14 +1,18 @@
 package com.phoenix_sat.phoenix_sat_backend.error;
 
+import com.amazonaws.services.simpleemail.model.AmazonSimpleEmailServiceException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -69,5 +73,27 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleRegistrationVerificationSessionIsExpiredException(RegistrationVerificationSessionIsExpiredException e) {
         return new ErrorResponse(HttpStatus.FORBIDDEN,e.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public ErrorResponse handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        return new ErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE,e.getMessage());
+    }
+
+
+    @ExceptionHandler(AmazonSimpleEmailServiceException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleAmazonSESException(AmazonSimpleEmailServiceException ex) {
+        String errorMessage = "Email sending failed: " + ex.getMessage();
+
+        // Log the error if needed
+         log.error("Amazon SES error: {}", ex.getMessage());
+
+        if (ex.getErrorCode().equals("InvalidParameterValue")) {
+            errorMessage = "Invalid email address provided.";
+        }
+
+        return new ErrorResponse(HttpStatus.BAD_REQUEST,errorMessage);
     }
 }

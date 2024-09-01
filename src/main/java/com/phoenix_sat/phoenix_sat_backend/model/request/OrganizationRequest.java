@@ -5,6 +5,8 @@ import com.phoenix_sat.phoenix_sat_backend.mark.Create;
 import com.phoenix_sat.phoenix_sat_backend.validator.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 
 public record OrganizationRequest(
@@ -16,7 +18,11 @@ public record OrganizationRequest(
         Integer numEmployees,
         String country,
         String industry,
-        @NotEmpty String domain
+        @NotEmpty String domain,
+        @Email String adminEmail,
+        @NotEmpty String adminFullname,
+
+        @RequestParam MultipartFile logo
 ) {
 }
 
