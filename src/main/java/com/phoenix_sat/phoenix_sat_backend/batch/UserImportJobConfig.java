@@ -1,12 +1,14 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRequest;
 import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.RoleRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.UserRepository;
-import com.phoenix_sat.phoenix_sat_backend.service.FileService;
+import com.phoenix_sat.phoenix_sat_backend.service.impl.S3ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.batch.core.Job;
@@ -28,27 +30,34 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import java.io.FileInputStream;
 
 @Configuration
 @RequiredArgsConstructor
 public class UserImportJobConfig {
-    private final FileService fileService;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final PlatformTransactionManager platformTransactionManager;
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
     private final CustomEventPublisher customEventPublisher;
+    private final S3ServiceImpl s3ServiceImpl;
+    private final PasswordEncoder passwordEncoder;
+
     @Bean
     @StepScope
     @SneakyThrows
     public FlatFileItemReader<UserRequest> userRequestFlatFileItemReader(@Value("#{jobParameters[filename]}") String filename,
                                                                          @Value("#{jobParameters[organizationId]}") String organizationId) {
         FlatFileItemReader<UserRequest> reader = new FlatFileItemReader<>();
-        reader.setResource(new InputStreamResource(new FileInputStream(fileService.getFile(filename))));
+
+        S3Object s3Object = s3ServiceImpl.getFile(filename);
+        S3ObjectInputStream s3InputStream = s3Object.getObjectContent();
+
+        InputStreamResource inputStreamResource = new InputStreamResource(s3InputStream);
+
+        reader.setResource(inputStreamResource);
         reader.setName("User-CSV-Reader");
         reader.setLinesToSkip(1);
         reader.setLineMapper(lineMapper(organizationId));
@@ -99,7 +108,10 @@ public class UserImportJobConfig {
     @Bean
     @StepScope
     public UserItemWriter userItemWriter() {
-        return new UserItemWriter(this.userRepository, this.organizationRepository, this.customEventPublisher);
+        return new UserItemWriter(this.userRepository
+                , this.organizationRepository
+                , this.customEventPublisher
+                , this.passwordEncoder);
     }
 
     @Bean("userItemProcessor")

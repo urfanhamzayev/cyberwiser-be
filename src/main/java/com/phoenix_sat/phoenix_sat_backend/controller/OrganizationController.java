@@ -1,6 +1,5 @@
 package com.phoenix_sat.phoenix_sat_backend.controller;
 
-import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationUpdateRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.response.OrganizationResponse;
@@ -14,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -25,9 +23,9 @@ public class OrganizationController {
     private final UserService userService;
 
 
-    @PostMapping
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
-    public OrganizationResponse create(@RequestBody @Valid OrganizationRequest organizationRequest) {
+    public OrganizationResponse create(@ModelAttribute OrganizationRequest organizationRequest) {
         return organizationService.create(organizationRequest);
     }
 

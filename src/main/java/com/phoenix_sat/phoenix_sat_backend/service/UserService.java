@@ -19,7 +19,5 @@ public interface UserService {
 
     List<UserProgressReport> getAllUserProgress();
 
-    UserRegisterResponse register(String organizationId, UserRegisterRequest userRegisterRequest);
 
-    JwtToken completeRegistration(String verificationId, RegistrationCompletionRequest completionRequest);
 }

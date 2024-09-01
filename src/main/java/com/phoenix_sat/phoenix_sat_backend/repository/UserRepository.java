@@ -22,8 +22,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Transactional
     @Modifying
-    @Query("update User u set u.isActive = false where u.id =:userId")
-    void updateById(String userId);
+    @Query("update User u set u.isActive = :isActive, u.isDeleted = :isDeleted where u.id =:userId")
+    void updateIsActiveAndIsDeletedById(String userId,Boolean isActive,Boolean isDeleted);
 
     @Query("Select u from User u where u.organization.id=:organizationId and u.isActive=true")
     List<User> findUsersByOrganizationIdAndIsActiveTrue(String organizationId);
@@ -32,4 +32,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Modifying
     @Query("update User u set u.isActive = :isActive, u.isDeleted = :isDeleted where u.organization.id =:organizationId")
     void updateUsersIsActiveByOrganizationId(Boolean isActive, Boolean isDeleted, String organizationId);
+
+    List<User> findAllByOrganizationId(String orgId);
 }

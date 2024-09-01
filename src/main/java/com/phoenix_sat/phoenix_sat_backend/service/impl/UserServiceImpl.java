@@ -1,16 +1,14 @@
 package com.phoenix_sat.phoenix_sat_backend.service.impl;
 
 import com.phoenix_sat.phoenix_sat_backend.entity.*;
-import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.AuthenticationException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.RegistrationVerificationSessionIsExpiredException;
-import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceAlreadyExistException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.model.jwt.JwtToken;
-import com.phoenix_sat.phoenix_sat_backend.model.request.RegistrationCompletionRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserLoginRequest;
-import com.phoenix_sat.phoenix_sat_backend.model.request.UserRegisterRequest;
-import com.phoenix_sat.phoenix_sat_backend.model.response.*;
+import com.phoenix_sat.phoenix_sat_backend.model.response.CourseStatistics;
+import com.phoenix_sat.phoenix_sat_backend.model.response.UserInfo;
+import com.phoenix_sat.phoenix_sat_backend.model.response.UserProfileResponse;
+import com.phoenix_sat.phoenix_sat_backend.model.response.UserProgressReport;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
 import com.phoenix_sat.phoenix_sat_backend.security.JWTProvider;
 import com.phoenix_sat.phoenix_sat_backend.service.UserService;
@@ -18,14 +16,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,9 +33,6 @@ public class UserServiceImpl implements UserService {
     private final ProgressRepository progressRepository;
     private final CompletionRepository completionRepository;
     private final CourseAssignmentRepository courseAssignmentRepository;
-    private final OrganizationRepository organizationRepository;
-    private final RoleRepository roleRepository;
-    private final RegistrationVerificationSessionRepository verificationSessionRepository;
 
     @Override
     public JwtToken logIn(UserLoginRequest userLoginRequest) {
@@ -54,6 +45,7 @@ public class UserServiceImpl implements UserService {
             return buildJwtToken(user);
         }
         throw new AuthenticationException("Bad credentials");
+
     }
 
     @Override
@@ -74,93 +66,12 @@ public class UserServiceImpl implements UserService {
         return users.stream().map(user -> getUserProgressByUserId(user.getId())).toList();
     }
 
-    @Override
-    public UserRegisterResponse register(String organizationId, UserRegisterRequest userRegisterRequest) {
-        Boolean isExist = userRepository.existsByEmailAndIsActiveTrueAndIsDeletedFalse(userRegisterRequest.email());
-
-        Organization organization = organizationRepository.findById(organizationId).orElseThrow(() ->
-                new ResourceNotFoundException("Organization not found. Id:" + organizationId));
-        if (isExist)
-            throw new ResourceAlreadyExistException("User already exist with this email :" + userRegisterRequest.email());
-
-        User user = buildUserFromRegisterRequest(userRegisterRequest, organization);
-
-        var savedUser = userRepository.save(user);
-
-        return UserRegisterResponse.builder()
-                .isActive(savedUser.getIsActive())
-                .userId(savedUser.getId())
-                .email(savedUser.getEmail())
-                .fullName(savedUser.getFullName())
-                .build();
-
-    }
-
-    @Transactional
-    @Override
-    public JwtToken completeRegistration(String verificationId, RegistrationCompletionRequest completionRequest) {
-        var verificationSession = verificationSessionRepository.findByVerificationIdAndIsVerifiedFalse(verificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Verification session not found. id-" + verificationId));
-
-        var user = userRepository.findByIdAndIsActiveFalse(verificationSession.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found. id-" + verificationSession.getUserId()));
-
-        if (isExpiredVerificationSession(verificationSession))
-            throw new RegistrationVerificationSessionIsExpiredException("Session is expired. id-" + verificationId);
-
-        String encodedPassword = passwordEncoder.encode(completionRequest.password());
-
-        setPasswordAndIsActiveAndUpdateDate(user, encodedPassword);
-        var updatedUser = userRepository.save(user);
-
-        markVerificationSessionAsVerifiedAndDeleted(verificationSession);
-        verificationSessionRepository.save(verificationSession);
-
-        return buildJwtToken(updatedUser);
-    }
-
-    private void markVerificationSessionAsVerifiedAndDeleted(RegistrationVerificationSession verificationSession) {
-        verificationSession.setIsVerified(true);
-        verificationSession.setIsDeleted(true);
-        verificationSession.setUpdateDate(new Date());
-    }
-
-    private void setPasswordAndIsActiveAndUpdateDate(User user, String encodedPassword) {
-        user.setPassword(encodedPassword);
-        user.setIsActive(true);
-        user.setUpdateDate(new Date());
-    }
-
-    private boolean isExpiredVerificationSession(RegistrationVerificationSession verificationSession) {
-        Date createDate = verificationSession.getCreateDate();
-        Instant createInstant = createDate.toInstant(); // Convert Date to Instant
-        Instant now = Instant.now();
-
-        long hoursElapsed = ChronoUnit.HOURS.between(createInstant, now);
-
-        return hoursElapsed >= 24;
-    }
-
-    private User buildUserFromRegisterRequest(UserRegisterRequest userRegisterRequest, Organization organization) {
-        return User.builder()
-                .firstName(userRegisterRequest.firstName())
-                .lastName(userRegisterRequest.lastName())
-                .email(userRegisterRequest.email())
-                .password(passwordEncoder.encode(userRegisterRequest.password()))
-                .pictureUrl(userRegisterRequest.pictureUrl())
-                .isActive(true)
-                .roles(Set.of(roleRepository.findByRole(RoleType.USER).orElseThrow(ResourceNotFoundException::new)))
-                .organization(organization)
-                .build();
-    }
-
-
     private UserProfileResponse buildUserProfileResponse() {
         return UserProfileResponse.builder()
                 .userId(userInfo.getUser().getId())
                 .fullName(userInfo.getUser().getFirstName() + " " + userInfo.getUser().getLastName())
                 .organizationId(userInfo.getUser().getOrganization().getId())
-                .pictureUrl(userInfo.getUser().getPictureUrl())
+                .pictureUrl(userInfo.getUser().getProfilePictureKey())
                 .email(userInfo.getUser().getEmail())
                 .build();
     }
@@ -234,7 +145,7 @@ public class UserServiceImpl implements UserService {
                 .progressPercentage(rate)
                 .courseTitle(currentCourse.getTitle())
                 .courseTags(currentCourse.getTags())
-                .coursePictureUrl(currentCourse.getPictureUrl())
+                .coursePictureUrl(currentCourse.getPictureKey())
                 .completedDate(isCompleted ? new Date() : null)
                 .isCompleted(isCompleted)
                 .courseName(currentCourse.getName())

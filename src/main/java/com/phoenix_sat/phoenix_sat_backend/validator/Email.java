@@ -16,8 +16,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface Email {
     String message() default "Provided email address is not valid";
-    boolean nullable() default true;
-    boolean isEmpty() default true;
+    boolean nullable() default false;
+    boolean isEmpty() default false;
 
     Class<?>[] groups() default {};
 

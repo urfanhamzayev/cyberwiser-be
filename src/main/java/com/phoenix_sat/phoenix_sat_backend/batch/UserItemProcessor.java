@@ -1,8 +1,11 @@
 package com.phoenix_sat.phoenix_sat_backend.batch;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.Role;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
+import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationRequest;
 import com.phoenix_sat.phoenix_sat_backend.model.request.UserRequest;
+import com.phoenix_sat.phoenix_sat_backend.repository.OrganizationRepository;
 import com.phoenix_sat.phoenix_sat_backend.repository.RoleRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

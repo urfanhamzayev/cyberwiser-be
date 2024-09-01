@@ -6,5 +6,5 @@ import lombok.Builder;
 
 import java.util.List;
 
-public record RegistrationVerificationEvent(List<? extends User> users) {
+public record RegistrationVerificationEvent(List<? extends User> users,List<String> temporaryPasswords) {
 }

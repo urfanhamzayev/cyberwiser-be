@@ -18,5 +18,6 @@ public record OrganizationResponse(String organizationId,
                                    Integer numEmployees,
                                    String country,
                                    String industry,
-                                   String domain) {
+                                   String domain,
+                                   String logoKeyName) {
 }

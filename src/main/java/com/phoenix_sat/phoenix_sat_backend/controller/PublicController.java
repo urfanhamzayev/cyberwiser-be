@@ -21,18 +21,4 @@ public class PublicController {
     public JwtToken logIn(@RequestBody @Valid UserLoginRequest userLoginRequest) {
         return userService.logIn(userLoginRequest);
     }
-
-    @PostMapping("/{organizationId}/register")
-    public UserRegisterResponse register(@PathVariable String organizationId,
-                                         @RequestBody
-                                         @Valid UserRegisterRequest userRegisterRequest) {
-        return userService.register(organizationId, userRegisterRequest);
-    }
-
-    @PostMapping("/registration-complete/{verificationId}")
-    public JwtToken completeRegistration(@PathVariable String verificationId,
-                                         @RequestBody @Valid RegistrationCompletionRequest completionRequest) {
-        return userService.completeRegistration(verificationId, completionRequest);
-    }
-
 }

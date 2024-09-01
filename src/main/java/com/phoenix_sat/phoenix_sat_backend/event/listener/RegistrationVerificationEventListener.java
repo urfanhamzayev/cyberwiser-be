@@ -15,6 +15,6 @@ public class RegistrationVerificationEventListener {
     @Async
     @EventListener
     public void onEvent(RegistrationVerificationEvent verificationEvent) {
-        emailService.sendRegistrationCompleteEmail(verificationEvent.users());
+        emailService.sendRegistrationCompleteEmail(verificationEvent);
     }
 }

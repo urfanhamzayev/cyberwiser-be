@@ -43,6 +43,10 @@ dependencies {
     implementation 'com.sun.mail:javax.mail:1.6.2' // JavaMail dependency
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+    implementation 'software.amazon.awssdk:regions:2.25.50'
+    implementation 'software.amazon.awssdk:secretsmanager:2.25.50'
+//    spring-cloud-starter-aws-secrets-manager-config
+
 
 }
 dependencyManagement {

@@ -47,4 +47,6 @@ public class Organization extends BaseEntity {
 
     private String domain;
 
+    @Column(name = "logo_key_name")
+    private String logoKeyName;
 }

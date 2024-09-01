@@ -7,7 +7,7 @@ import lombok.Builder;
 public record LectureResponse(String lectureId,
                               String title,
                               String duration,
-                              String videoUrl,
+                              String videoKey,
                               ContentType contentType,
                               Boolean isCompleted) {
 }
