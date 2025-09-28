@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -61,6 +62,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final PasswordEncoder passwordEncoder;
     private final CustomEventPublisher eventPublisher;
     private final S3Service s3Service;
+    private final RoleRepository roleRepository;
 
 
     @Override
@@ -68,7 +70,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (!isSuperAdmin())
             throw new PermissionDeniedException("You don't have permission to create organization. UserId: "
                                                 +userInfo.getUser().getId());
-
 
         Organization organization = organizationRepository.save(buildOrganization(organizationRequest));
 
@@ -86,17 +87,21 @@ public class OrganizationServiceImpl implements OrganizationService {
 
         eventPublisher.publish(new RegistrationVerificationEvent(List.of(user),List.of(temporaryPassword)));
 
-
         return buildOrganizationResponse(organization);
     }
 
     private User buildUser(OrganizationRequest organizationRequest,Organization organization, String temporaryPassword) {
+
+        Role adminRole = roleRepository.findByRole(RoleType.ADMIN)
+                .orElseThrow(() -> new IllegalStateException("ADMIN role not found. Seed roles first."));
+
         return User.builder()
                 .email(organizationRequest.adminEmail())
                 .firstName(getUserFirstNameByFullname(organizationRequest.adminFullname()))
                 .lastName(getUserLastNameByFullname(organizationRequest.adminFullname()))
                 .password(passwordEncoder.encode(temporaryPassword))
                 .organization(organization)
+                .roles(Set.of(adminRole))
                 .build();
     }
 

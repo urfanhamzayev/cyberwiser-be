@@ -40,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
             model.put("fullname", request.fullName());
             model.put("email", request.to());
             model.put("temp_password", verificationEvent.temporaryPasswords().get(index));
-            model.put("login_link", "http://sat-phoenix-load-balancer-942756280.eu-central-1.elb.amazonaws.com/swagger-ui/index.html#/public-controller/logIn");
+//            model.put("login_link", "http://sat-phoenix-load-balancer-942756280.eu-central-1.elb.amazonaws.com/swagger-ui/index.html#/public-controller/logIn");
 
             htmlSend(request, model);
             index++;
