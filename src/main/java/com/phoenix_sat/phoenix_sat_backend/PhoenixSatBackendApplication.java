@@ -16,23 +16,3 @@ public class PhoenixSatBackendApplication {
 //}
 }
 
-// TODO:
-
-//   BEFORE RUN APP THIS SHOULD MOVE TO APPLICATION.YML
-//        #cloud:
-//        #  aws:
-//        #    region:
-//        #      static: eu-central-1
-//        #      auto: false
-//        #    stack:
-//        #      auto: false
-//        #    credentials:
-//        #      access-key: AKIAQEIP3QLAS6EYA2EI
-//        #      secret-key: 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
-//        #
-//        #aws:
-//        #  s3:
-//        #    bucket-name: dev-logeaze
-//        #    region: eu-central-1
-//        #    access-key: AKIAQEIP3QLAS6EYA2EI
-//        #    secret-key: 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
