@@ -13,4 +13,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, Stri
     Optional<Organization> findByTypeAndIsDeletedFalse(OrganizationType type);
 
     List<Organization> findAllByIsDeletedFalse();
+
+   Optional<Organization> findByIdAndIsDeletedFalse(String organizationId);
 }

@@ -19,4 +19,6 @@ public interface OrganizationService {
     OrganizationResponse update(OrganizationUpdateRequest organizationUpdateRequest);
 
     List<OrganizationResponse> getAllOrganization();
+
+    OrganizationResponse getOrganization(String token);
 }

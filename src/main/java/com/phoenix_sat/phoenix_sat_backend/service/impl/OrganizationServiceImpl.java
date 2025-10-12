@@ -1,6 +1,7 @@
 package com.phoenix_sat.phoenix_sat_backend.service.impl;
 
 import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
+import com.phoenix_sat.phoenix_sat_backend.entity.Country;
 import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
 import com.phoenix_sat.phoenix_sat_backend.entity.Role;
 import com.phoenix_sat.phoenix_sat_backend.entity.User;
@@ -13,6 +14,7 @@ import com.phoenix_sat.phoenix_sat_backend.model.request.OrganizationUpdateReque
 import com.phoenix_sat.phoenix_sat_backend.model.response.OrganizationResponse;
 import com.phoenix_sat.phoenix_sat_backend.model.response.UserInfo;
 import com.phoenix_sat.phoenix_sat_backend.repository.*;
+import com.phoenix_sat.phoenix_sat_backend.security.JWTProvider;
 import com.phoenix_sat.phoenix_sat_backend.service.OrganizationService;
 import com.phoenix_sat.phoenix_sat_backend.service.S3Service;
 import com.phoenix_sat.phoenix_sat_backend.util.UserUtil;
@@ -63,6 +65,8 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final CustomEventPublisher eventPublisher;
     private final S3Service s3Service;
     private final RoleRepository roleRepository;
+    private final CountryRepository countryRepository;
+    private final JWTProvider jwtProvider;
 
 
     @Override
@@ -71,7 +75,11 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new PermissionDeniedException("You don't have permission to create organization. UserId: "
                                                 +userInfo.getUser().getId());
 
-        Organization organization = organizationRepository.save(buildOrganization(organizationRequest));
+        Country country = countryRepository.findByCode(organizationRequest.countryCode())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Invalid country code: " + organizationRequest.countryCode()));
+
+        Organization organization = organizationRepository.save(buildOrganization(organizationRequest,country));
 
         String keyNameForLogo = organization.getId() + organizationRequest.logo().getOriginalFilename() + Util.generateRandomUUID();
         organization.setLogoKeyName(keyNameForLogo);
@@ -141,6 +149,10 @@ public class OrganizationServiceImpl implements OrganizationService {
         Organization existingOrganization = organizationRepository.findById(userInfo.getOrganization().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
 
+        Country country = countryRepository.findByCode(organizationUpdateRequest.countryCode())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Invalid country code: " + organizationUpdateRequest.countryCode()));
+
         updateOrganization(organizationUpdateRequest, existingOrganization);
 
         Organization updatedOrganization = organizationRepository.save(existingOrganization);
@@ -155,6 +167,20 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .stream()
                 .map(OrganizationServiceImpl::buildOrganizationResponse)
                 .toList();
+    }
+
+    @Override
+    public OrganizationResponse getOrganization(String token) {
+        // 1️⃣ Get organizationId from JWT
+        String organizationId = jwtProvider.getOrganizationIdFromToken(token);
+
+
+        // 2️⃣ Find organization by ID (and not deleted)
+        Organization organization = organizationRepository.findByIdAndIsDeletedFalse(organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found: " + organizationId));
+
+        // 3️⃣ Build response
+        return buildOrganizationResponse(organization);
     }
 
     @Transactional
@@ -183,7 +209,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     private static void updateOrganization(OrganizationUpdateRequest organizationUpdateRequest, Organization existingOrganization) {
-        existingOrganization.setCountry(organizationUpdateRequest.country());
+//        existingOrganization.setCountry(organizationUpdateRequest.country()); //todo @Sarkhan
         existingOrganization.setName(organizationUpdateRequest.organizationName());
         existingOrganization.setDescription(organizationUpdateRequest.description());
         existingOrganization.setEmail(organizationUpdateRequest.email());
@@ -213,14 +239,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 
 
-    private static OrganizationResponse buildOrganizationResponse(Organization organization) {
+    private static OrganizationResponse buildOrganizationResponse(Organization organization ) {
         return OrganizationResponse.builder().
                 organizationId(organization.getId())
                 .organizationName(organization.getName())
                 .organizationType(organization.getType())
                 .industry(organization.getIndustry())
                 .email(organization.getEmail())
-                .country(organization.getCountry())
+                .countryCode(organization.getCountry().getCode())
                 .domain(organization.getDomain())
                 .description(organization.getDescription())
                 .numEmployees(organization.getNumEmployees())
@@ -229,14 +255,14 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .build();
     }
 
-    private static Organization buildOrganization(OrganizationRequest organizationRequest) {
+    private static Organization buildOrganization(OrganizationRequest organizationRequest, Country country) {
         return Organization.builder().type(organizationRequest.organizationType())
                 .name(organizationRequest.organizationName())
                 .type(organizationRequest.organizationType())
                 .email(organizationRequest.email())
                 .domain(organizationRequest.domain())
                 .industry(organizationRequest.industry())
-                .country(organizationRequest.country())
+                .country(country)
                 .description(organizationRequest.description())
                 .numEmployees(organizationRequest.numEmployees())
                 .phoneNumber(organizationRequest.phoneNumber())

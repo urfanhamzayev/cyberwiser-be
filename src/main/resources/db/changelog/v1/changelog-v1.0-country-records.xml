@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="002-insert-countries" author="sarkan">
+        <loadData
+                file="db/changelog/v1/country-data.csv"
+                separator=","
+                encoding="UTF-8"
+                tableName="country"
+                relativeToChangelogFile="false">
+            <column name="code" type="STRING"/>
+            <column name="name_en" type="STRING"/>
+            <column name="name_az" type="STRING"/>
+            <column name="name_ru" type="STRING"/>
+        </loadData>
+    </changeSet>
+
+</databaseChangeLog>

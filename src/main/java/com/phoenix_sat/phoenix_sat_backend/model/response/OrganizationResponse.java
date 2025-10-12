@@ -16,7 +16,7 @@ public record OrganizationResponse(String organizationId,
                                    String description,
                                    String phoneNumber,
                                    Integer numEmployees,
-                                   String country,
+                                   String countryCode,
                                    String industry,
                                    String domain,
                                    String logoKeyName) {

@@ -41,7 +41,10 @@ public class Organization extends BaseEntity {
     @Column(name = "num_employees")
     private Integer numEmployees;
 
-    private String country;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_code", referencedColumnName = "code")
+    private Country country;
+//    private String country;
 
     private String industry;
 

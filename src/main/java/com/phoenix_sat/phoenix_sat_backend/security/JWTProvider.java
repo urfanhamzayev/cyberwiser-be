@@ -69,4 +69,9 @@ public class JWTProvider {
         Date expirationDate = new Date(jwtToken.getExpirationDate());
         return new Date().after(expirationDate);
     }
+
+    public String getOrganizationIdFromToken(String token) {
+        DecodedJWT decodedJWT = jwtVerifier.verify(token);
+        return decodedJWT.getClaim("organizationId").asString();
+    }
 }

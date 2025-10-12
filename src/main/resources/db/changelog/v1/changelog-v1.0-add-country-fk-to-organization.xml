@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="003-add-country-fk-to-organization" author="sarkan">
+        <addColumn tableName="organizations">
+            <column name="country_code" type="VARCHAR(3)"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="organizations"
+                baseColumnNames="country_code"
+                referencedTableName="country"
+                referencedColumnNames="code"
+                constraintName="fk_organization_country"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -365,7 +365,7 @@
             <column name="first_name" value="Urfan"/>
             <column name="last_name" value="Hamzayev"/>
             <column name="email" value="urfanhamzayev@gmail.com"/>
-            <column name="password" value="$2y$08$4tNdFdihFvq2vMtSvQefvuO5c8dcpBoIzlCX756DJDXWRPzy1CxRK"/>
+            <column name="password" value="$2a$08$aZqWnAJRaKmNeb8cbGQsj.HC6lgvk.BCWKZd7vGJXW4bhkRdSFXuK"/>
             <column name="profile_picture_key" value="http://example.com/picture.jpg"/>
             <column name="is_active" value="true"/>
             <column name="is_deleted" value="false"/>

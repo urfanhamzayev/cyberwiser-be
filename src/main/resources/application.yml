@@ -5,7 +5,7 @@ spring:
 #    url: jdbc:postgresql://sat-phoenix-rds-db.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/postgres?currentSchema=${PHOENIX_BACKEND_DB_SCHEMA:public}
 #    username: postgres
 #    password: .7jWsfG|.3KGYo*t-QAL_#)445)K
-    url: jdbc:postgresql://logeazedb.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/phoenix?serverTimezone=UTC
+    url: jdbc:postgresql://logeazedb.cbycuww840fp.eu-central-1.rds.amazonaws.com:5432/phoenixQA?serverTimezone=UTC
     username: postgres
     password: postgres123#
   jpa:
@@ -69,6 +69,7 @@ security:
       /api/v1/public/**,
       /ws-registration/**,
       /api/v1/public/accounts/**,
+      /api/countries/**,
       /
 
   jwt:
