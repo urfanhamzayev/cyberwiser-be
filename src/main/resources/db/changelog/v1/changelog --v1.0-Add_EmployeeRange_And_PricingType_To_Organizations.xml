@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.15.xsd">
+
+    <changeSet id="V25-employee-range-and-pricing-type" author="sarkan">
+
+        <!-- ======================================== -->
+        <!-- 1. Create employee_ranges table          -->
+        <!-- ======================================== -->
+        <createTable tableName="employee_ranges">
+            <column name="id" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="label" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="min_employees" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_employees" type="INT"/>
+            <column name="monthly_price" type="NUMERIC(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(10)" defaultValue="USD">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+        </createTable>
+
+        <!-- ======================================== -->
+        <!-- 2. Insert default pricing ranges         -->
+        <!-- ======================================== -->
+        <insert tableName="employee_ranges">
+            <column name="label" value="1–10"/>
+            <column name="min_employees" value="1"/>
+            <column name="max_employees" value="10"/>
+            <column name="monthly_price" value="20.00"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="true"/>
+        </insert>
+        <insert tableName="employee_ranges">
+            <column name="label" value="11–50"/>
+            <column name="min_employees" value="11"/>
+            <column name="max_employees" value="50"/>
+            <column name="monthly_price" value="50.00"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="true"/>
+        </insert>
+        <insert tableName="employee_ranges">
+            <column name="label" value="51–200"/>
+            <column name="min_employees" value="51"/>
+            <column name="max_employees" value="200"/>
+            <column name="monthly_price" value="120.00"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="true"/>
+        </insert>
+        <insert tableName="employee_ranges">
+            <column name="label" value="201–500"/>
+            <column name="min_employees" value="201"/>
+            <column name="max_employees" value="500"/>
+            <column name="monthly_price" value="250.00"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="true"/>
+        </insert>
+        <insert tableName="employee_ranges">
+            <column name="label" value="500+"/>
+            <column name="min_employees" value="501"/>
+            <column name="max_employees" valueNumeric="NULL"/>
+            <column name="monthly_price" value="500.00"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="true"/>
+        </insert>
+
+        <!-- ======================================== -->
+        <!-- 3. Update organizations table            -->
+        <!-- ======================================== -->
+
+        <!-- Remove old num_employees column -->
+        <dropColumn tableName="organizations" columnName="num_employees"/>
+
+        <!-- Add new pricing-related columns -->
+        <addColumn tableName="organizations">
+            <column name="employee_range_id" type="INT"/>
+            <column name="custom_monthly_price" type="NUMERIC(10,2)"/>
+            <column name="custom_currency" type="VARCHAR(10)"/>
+            <column name="pricing_type" type="VARCHAR(20)" defaultValue="DEFAULT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add foreign key constraint -->
+        <addForeignKeyConstraint
+                baseTableName="organizations"
+                baseColumnNames="employee_range_id"
+                referencedTableName="employee_ranges"
+                referencedColumnNames="id"
+                constraintName="fk_organization_employee_range"/>
+
+        <!-- Add index for better performance -->
+        <createIndex tableName="organizations" indexName="idx_organizations_employee_range_id">
+            <column name="employee_range_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

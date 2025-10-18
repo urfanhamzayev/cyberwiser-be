@@ -11,6 +11,7 @@
     <include file="changelog-v1.0-country-table.xml" relativeToChangelogFile="true"/>
 <!--    <include file="changelog-v1.0-country-records.xml" relativeToChangelogFile="true"/>-->
     <include file="changelog-v1.0-add-country-fk-to-organization.xml" relativeToChangelogFile="true"/>
+    <include file="changelog --v1.0-Add_EmployeeRange_And_PricingType_To_Organizations.xml" relativeToChangelogFile="true"/>
 
 
 </databaseChangeLog>

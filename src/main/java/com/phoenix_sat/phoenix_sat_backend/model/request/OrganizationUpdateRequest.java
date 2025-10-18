@@ -11,7 +11,7 @@ public record OrganizationUpdateRequest( @NotEmpty( message = "Organization name
                                          @Email String email,
                                          @NotEmpty String description,
                                          @NotEmpty String phoneNumber,
-                                         Integer numEmployees,
+                                         Long employeeRangeID,
                                          String countryCode,
                                          String industry) {
 }

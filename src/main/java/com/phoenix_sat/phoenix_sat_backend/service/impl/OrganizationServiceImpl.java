@@ -1,11 +1,10 @@
 package com.phoenix_sat.phoenix_sat_backend.service.impl;
 
 import com.phoenix_sat.phoenix_sat_backend.config.CustomEventPublisher;
-import com.phoenix_sat.phoenix_sat_backend.entity.Country;
-import com.phoenix_sat.phoenix_sat_backend.entity.Organization;
-import com.phoenix_sat.phoenix_sat_backend.entity.Role;
-import com.phoenix_sat.phoenix_sat_backend.entity.User;
+import com.phoenix_sat.phoenix_sat_backend.entity.*;
+import com.phoenix_sat.phoenix_sat_backend.enums.PricingType;
 import com.phoenix_sat.phoenix_sat_backend.enums.RoleType;
+import com.phoenix_sat.phoenix_sat_backend.error.exception.GeneralException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.PermissionDeniedException;
 import com.phoenix_sat.phoenix_sat_backend.error.exception.ResourceNotFoundException;
 import com.phoenix_sat.phoenix_sat_backend.event.RegistrationVerificationEvent;
@@ -28,6 +27,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +67,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final RoleRepository roleRepository;
     private final CountryRepository countryRepository;
     private final JWTProvider jwtProvider;
+    private final EmployeeRangeRepository employeeRangeRepository;
 
 
     @Override
@@ -79,7 +80,11 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Invalid country code: " + organizationRequest.countryCode()));
 
-        Organization organization = organizationRepository.save(buildOrganization(organizationRequest,country));
+        EmployeeRange employeeRange =employeeRangeRepository.findById(organizationRequest.employeeRangeID())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Invalid EmployeeRange code: " + organizationRequest.employeeRangeID()));
+
+        Organization organization = organizationRepository.save(buildOrganization(organizationRequest,country,employeeRange));
 
         String keyNameForLogo = organization.getId() + organizationRequest.logo().getOriginalFilename() + Util.generateRandomUUID();
         organization.setLogoKeyName(keyNameForLogo);
@@ -101,7 +106,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private User buildUser(OrganizationRequest organizationRequest,Organization organization, String temporaryPassword) {
 
         Role adminRole = roleRepository.findByRole(RoleType.ADMIN)
-                .orElseThrow(() -> new IllegalStateException("ADMIN role not found. Seed roles first."));
+                .orElseThrow(() -> new GeneralException("ADMIN role not found. Seed roles first.",404,HttpStatus.BAD_REQUEST));
 
         return User.builder()
                 .email(organizationRequest.adminEmail())
@@ -117,10 +122,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public void deleteUser(String userId) {
         User user = userRepository.findByIdAndIsActiveTrue(userId).orElseThrow(() ->
-                new ResourceNotFoundException("User not found with this id:" + userId));
+                new GeneralException("User not found with this id:" + userId,404, HttpStatus.NOT_FOUND));
 
         if (!userInfo.getUser().getOrganization().getId().equals(user.getOrganization().getId()))
-            throw new PermissionDeniedException("You do not have permission to perform this action.");
+            throw new GeneralException("You do not have permission to perform this action.",401,HttpStatus.PERMANENT_REDIRECT);
 
         userRepository.updateIsActiveAndIsDeletedById(user.getId(), false, true);
     }
@@ -150,10 +155,16 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
 
         Country country = countryRepository.findByCode(organizationUpdateRequest.countryCode())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Invalid country code: " + organizationUpdateRequest.countryCode()));
+                .orElseThrow(() -> new GeneralException(
+                        "Invalid country code: " + organizationUpdateRequest.countryCode(),404, HttpStatus.NOT_FOUND));
 
-        updateOrganization(organizationUpdateRequest, existingOrganization);
+
+        EmployeeRange employeeRange =employeeRangeRepository.findById(organizationUpdateRequest.employeeRangeID())
+                .orElseThrow(() -> new GeneralException(
+                        "Invalid EmployeeRange code: " + organizationUpdateRequest.employeeRangeID(),404, HttpStatus.NOT_FOUND));
+
+
+        updateOrganization(organizationUpdateRequest, existingOrganization ,employeeRange,country);
 
         Organization updatedOrganization = organizationRepository.save(existingOrganization);
         log.info("Organization {} updated successfully", userInfo.getOrganization().toString());
@@ -177,7 +188,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
         // 2️⃣ Find organization by ID (and not deleted)
         Organization organization = organizationRepository.findByIdAndIsDeletedFalse(organizationId)
-                .orElseThrow(() -> new IllegalArgumentException("Organization not found: " + organizationId));
+                .orElseThrow(() -> new GeneralException("Organization not found: " + organizationId ,404, HttpStatus.NOT_FOUND));
 
         // 3️⃣ Build response
         return buildOrganizationResponse(organization);
@@ -187,7 +198,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public void deactivateOrganization(String organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with this id:" + organizationId));
+                .orElseThrow(() -> new GeneralException("Organization not found with this id:" + organizationId,400, HttpStatus.NOT_FOUND));
         organization.setIsDeleted(true);
 
         setIsDeletedTrueInAllTablesByOrganizationId(organization);
@@ -208,13 +219,13 @@ public class OrganizationServiceImpl implements OrganizationService {
         return fullname.split(" ")[0];
     }
 
-    private static void updateOrganization(OrganizationUpdateRequest organizationUpdateRequest, Organization existingOrganization) {
-//        existingOrganization.setCountry(organizationUpdateRequest.country()); //todo @Sarkhan
+    private static void updateOrganization(OrganizationUpdateRequest organizationUpdateRequest, Organization existingOrganization, EmployeeRange employeeRange, Country country) {
+        existingOrganization.setCountry(country);
         existingOrganization.setName(organizationUpdateRequest.organizationName());
         existingOrganization.setDescription(organizationUpdateRequest.description());
         existingOrganization.setEmail(organizationUpdateRequest.email());
         existingOrganization.setIndustry(organizationUpdateRequest.industry());
-        existingOrganization.setNumEmployees(organizationUpdateRequest.numEmployees());
+        existingOrganization.setEmployeeRange(employeeRange);
         existingOrganization.setPhoneNumber(organizationUpdateRequest.phoneNumber());
     }
 
@@ -249,13 +260,13 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .countryCode(organization.getCountry().getCode())
                 .domain(organization.getDomain())
                 .description(organization.getDescription())
-                .numEmployees(organization.getNumEmployees())
+                .employeeRange(organization.getEmployeeRange())
                 .phoneNumber(organization.getPhoneNumber())
                 .logoKeyName(organization.getLogoKeyName())
                 .build();
     }
 
-    private static Organization buildOrganization(OrganizationRequest organizationRequest, Country country) {
+    private static Organization buildOrganization(OrganizationRequest organizationRequest, Country country, EmployeeRange employeeRange) {
         return Organization.builder().type(organizationRequest.organizationType())
                 .name(organizationRequest.organizationName())
                 .type(organizationRequest.organizationType())
@@ -264,8 +275,9 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .industry(organizationRequest.industry())
                 .country(country)
                 .description(organizationRequest.description())
-                .numEmployees(organizationRequest.numEmployees())
+                .employeeRange(employeeRange)
                 .phoneNumber(organizationRequest.phoneNumber())
+                .pricingType(PricingType.DEFAULT)
                 .build();
     }
 

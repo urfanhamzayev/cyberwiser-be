@@ -47,7 +47,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 } catch (JWTVerificationException ex) {
-                    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, "Provide valid Basic authentication header");
+                    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED,"Provide valid Basic authentication header");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                     return;

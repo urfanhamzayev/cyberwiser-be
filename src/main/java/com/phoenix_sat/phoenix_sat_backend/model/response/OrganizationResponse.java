@@ -1,5 +1,6 @@
 package com.phoenix_sat.phoenix_sat_backend.model.response;
 
+import com.phoenix_sat.phoenix_sat_backend.entity.EmployeeRange;
 import com.phoenix_sat.phoenix_sat_backend.enums.OrganizationType;
 import com.phoenix_sat.phoenix_sat_backend.mark.Create;
 import com.phoenix_sat.phoenix_sat_backend.validator.Email;
@@ -15,7 +16,7 @@ public record OrganizationResponse(String organizationId,
                                    String email,
                                    String description,
                                    String phoneNumber,
-                                   Integer numEmployees,
+                                   EmployeeRange employeeRange,
                                    String countryCode,
                                    String industry,
                                    String domain,

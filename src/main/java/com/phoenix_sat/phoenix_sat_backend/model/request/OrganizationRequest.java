@@ -15,7 +15,7 @@ public record OrganizationRequest(
         @Email String email,
         @NotEmpty String description,
         @NotEmpty String phoneNumber,
-        Integer numEmployees,
+        Long employeeRangeID,
         String countryCode,
         String industry,
         @NotEmpty String domain,
